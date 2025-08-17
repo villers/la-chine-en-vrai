@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://chine-en-vrai.fr/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+
+# Block admin areas (if any in the future)
+Disallow: /admin/
+Disallow: /api/
+
+# Allow important pages
+Allow: /
+Allow: /about
+Allow: /inspirations
+Allow: /custom-travel
+Allow: /blog
+Allow: /testimonials
+Allow: /contact
+Allow: /terms
+Allow: /privacy
