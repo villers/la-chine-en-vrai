@@ -2,24 +2,28 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { RootState, AppDispatch } from '@/lib/store/store';
+import { useAppDispatch } from '@/lib/store/hooks';
 import { 
   fetchTestimonials, 
   updateTestimonial, 
-  deleteTestimonial as deleteTestimonialAction 
-} from '@/lib/features/admin/adminSlice';
+  deleteTestimonial as deleteTestimonialAction,
+  useTestimonials,
+  useTestimonialsLoading,
+  usePublishedTestimonials,
+  useUnpublishedTestimonials
+} from '@/lib/features/admin/testimonialsSlice';
 import Link from 'next/link';
 
 export default function AdminTestimonials() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   
-  const { testimonials, testimonialsLoading: loadingData } = useSelector(
-    (state: RootState) => state.admin
-  );
+  const testimonials = useTestimonials();
+  const loadingData = useTestimonialsLoading();
+  const publishedTestimonials = usePublishedTestimonials();
+  const unpublishedTestimonials = useUnpublishedTestimonials();
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -88,13 +92,13 @@ export default function AdminTestimonials() {
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="text-sm text-gray-500">Publiés</div>
               <div className="text-2xl font-bold text-green-600">
-                {testimonials.filter(t => t.isPublished).length}
+                {publishedTestimonials.length}
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="text-sm text-gray-500">En attente</div>
               <div className="text-2xl font-bold text-yellow-600">
-                {testimonials.filter(t => !t.isPublished).length}
+                {unpublishedTestimonials.length}
               </div>
             </div>
           </div>

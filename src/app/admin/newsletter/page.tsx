@@ -2,23 +2,25 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { RootState, AppDispatch } from '@/lib/store/store';
+import { useAppDispatch } from '@/lib/store/hooks';
 import { 
   fetchSubscribers, 
-  deleteSubscriber as deleteSubscriberAction 
-} from '@/lib/features/admin/adminSlice';
+  deleteSubscriber as deleteSubscriberAction,
+  useSubscribers,
+  useNewsletterLoading,
+  useSubscribersThisMonth
+} from '@/lib/features/admin/newsletterSlice';
 import Link from 'next/link';
 
 export default function AdminNewsletter() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   
-  const { subscribers, newsletterLoading: loadingData } = useSelector(
-    (state: RootState) => state.admin
-  );
+  const subscribers = useSubscribers();
+  const loadingData = useNewsletterLoading();
+  const subscribersThisMonth = useSubscribersThisMonth();
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -102,11 +104,7 @@ export default function AdminNewsletter() {
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="text-sm text-gray-500">Nouveaux ce mois</div>
               <div className="text-2xl font-bold text-green-600">
-                {subscribers.filter(s => {
-                  const date = new Date(s.createdAt?.seconds * 1000);
-                  const now = new Date();
-                  return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-                }).length}
+                {subscribersThisMonth.length}
               </div>
             </div>
           </div>

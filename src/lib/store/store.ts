@@ -1,10 +1,23 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import travelFormReducer from '../features/travelForm/travelFormSlice';
 import newsletterReducer from '../features/newsletter/newsletterSlice';
 import testimonialsReducer from '../features/testimonials/testimonialsSlice';
 import blogReducer from '../features/blog/blogSlice';
 import inspirationsReducer from '../features/inspirations/inspirationsSlice';
-import adminReducer from '../features/admin/adminSlice';
+
+// Admin slices
+import adminTestimonialsReducer from '../features/admin/testimonialsSlice';
+import adminContactsReducer from '../features/admin/contactsSlice';
+import adminNewsletterReducer from '../features/admin/newsletterSlice';
+import adminTravelRequestsReducer from '../features/admin/travelRequestsSlice';
+
+// Combine admin reducers
+const adminReducer = combineReducers({
+  testimonials: adminTestimonialsReducer,
+  contacts: adminContactsReducer,
+  newsletter: adminNewsletterReducer,
+  travelRequests: adminTravelRequestsReducer,
+});
 
 export const store = configureStore({
   reducer: {

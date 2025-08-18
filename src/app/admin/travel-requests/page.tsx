@@ -2,24 +2,28 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { RootState, AppDispatch } from '@/lib/store/store';
+import { useAppDispatch } from '@/lib/store/hooks';
 import { 
   fetchTravelRequests, 
   markTravelRequestAsProcessed, 
-  deleteTravelRequest as deleteTravelRequestAction 
-} from '@/lib/features/admin/adminSlice';
+  deleteTravelRequest as deleteTravelRequestAction,
+  useTravelRequests,
+  useTravelRequestsLoading,
+  useNewTravelRequests,
+  useProcessedTravelRequests
+} from '@/lib/features/admin/travelRequestsSlice';
 import Link from 'next/link';
 
 export default function AdminTravelRequests() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   
-  const { travelRequests, travelRequestsLoading: loadingData } = useSelector(
-    (state: RootState) => state.admin
-  );
+  const travelRequests = useTravelRequests();
+  const loadingData = useTravelRequestsLoading();
+  const newTravelRequests = useNewTravelRequests();
+  const processedTravelRequests = useProcessedTravelRequests();
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -88,13 +92,13 @@ export default function AdminTravelRequests() {
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="text-sm text-gray-500">Nouvelles</div>
               <div className="text-2xl font-bold text-orange-600">
-                {travelRequests.filter(t => t.status === 'new').length}
+                {newTravelRequests.length}
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="text-sm text-gray-500">Traitées</div>
               <div className="text-2xl font-bold text-green-600">
-                {travelRequests.filter(t => t.status === 'processed').length}
+                {processedTravelRequests.length}
               </div>
             </div>
           </div>

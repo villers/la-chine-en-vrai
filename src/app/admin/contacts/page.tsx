@@ -2,24 +2,28 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { RootState, AppDispatch } from '@/lib/store/store';
+import { useAppDispatch } from '@/lib/store/hooks';
 import { 
   fetchContacts, 
   markContactAsProcessed, 
-  deleteContact as deleteContactAction 
-} from '@/lib/features/admin/adminSlice';
+  deleteContact as deleteContactAction,
+  useContacts,
+  useContactsLoading,
+  useNewContacts,
+  useProcessedContacts
+} from '@/lib/features/admin/contactsSlice';
 import Link from 'next/link';
 
 export default function AdminContacts() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   
-  const { contacts, contactsLoading: loadingData } = useSelector(
-    (state: RootState) => state.admin
-  );
+  const contacts = useContacts();
+  const loadingData = useContactsLoading();
+  const newContacts = useNewContacts();
+  const processedContacts = useProcessedContacts();
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -88,13 +92,13 @@ export default function AdminContacts() {
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="text-sm text-gray-500">Nouveaux</div>
               <div className="text-2xl font-bold text-orange-600">
-                {contacts.filter(c => c.status === 'new').length}
+                {newContacts.length}
               </div>
             </div>
             <div className="bg-white p-6 rounded-lg shadow">
               <div className="text-sm text-gray-500">Traités</div>
               <div className="text-2xl font-bold text-green-600">
-                {contacts.filter(c => c.status === 'processed').length}
+                {processedContacts.length}
               </div>
             </div>
           </div>
