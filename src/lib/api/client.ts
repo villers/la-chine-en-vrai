@@ -1,10 +1,22 @@
 import axios from 'axios';
 
 // Configuration de l'instance axios globale
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_API_URL || 'https://your-domain.com';
+  }
+  
+  // En développement, utilise l'URL courante si on est côté client
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.host}`;
+  }
+  
+  // Côté serveur, utilise localhost avec le port par défaut
+  return 'http://localhost:3000';
+};
+
 const apiClient = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' 
-    ? process.env.NEXT_PUBLIC_API_URL || 'https://your-domain.com'
-    : 'http://localhost:3000',
+  baseURL: getBaseURL(),
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

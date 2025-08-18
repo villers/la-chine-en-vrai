@@ -17,14 +17,16 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
 if (process.env.NODE_ENV === 'development') {
-  const isEmulatorConnected = (db as any)._delegate?._databaseId?.database?.includes('localhost');
-  if (!isEmulatorConnected) {
-    try {
-      connectFirestoreEmulator(db, 'localhost', 8080);
-      console.log('🔥 Connected to Firestore emulator');
-    } catch (error) {
-      console.log('⚠️ Firestore emulator connection failed:', error);
-    }
+  try {
+    // Utilise l'IP de la machine hôte ou localhost selon l'environnement
+    const emulatorHost = typeof window !== 'undefined' 
+      ? window.location.hostname 
+      : process.env.NEXT_PUBLIC_EMULATOR_HOST || '192.168.1.60';
+    
+    connectFirestoreEmulator(db, emulatorHost, 8080);
+    console.log(`🔥 Connected to Firestore emulator at ${emulatorHost}:8080`);
+  } catch (error) {
+    console.log('⚠️ Firestore emulator connection failed:', error);
   }
 }
 
