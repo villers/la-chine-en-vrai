@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === 'development') {
     // Utilise l'IP de la machine hôte ou localhost selon l'environnement
     const emulatorHost = typeof window !== 'undefined' 
       ? window.location.hostname 
-      : process.env.NEXT_PUBLIC_EMULATOR_HOST || '192.168.1.60';
+      : process.env.NEXT_PUBLIC_EMULATOR_HOST || '192.168.1.24';
     
     connectFirestoreEmulator(db, emulatorHost, 8080);
     connectAuthEmulator(auth, `http://${emulatorHost}:9099`);

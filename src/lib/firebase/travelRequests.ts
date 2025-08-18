@@ -10,7 +10,28 @@ import {
 } from 'firebase/firestore';
 import { db } from './config';
 
+// Interface moderne pour les demandes de voyage
 export interface TravelRequest {
+  id?: string;
+  name: string;
+  email: string;
+  phone: string;
+  destination: string;
+  duration: string;
+  startDate: string;
+  travelers: number;
+  budget: string;
+  interests: string[];
+  accommodationType: string;
+  transportPreference: string;
+  specialRequests?: string;
+  status: 'new' | 'processed';
+  createdAt?: any;
+  updatedAt?: any;
+}
+
+// Interface legacy pour compatibilité
+export interface LegacyTravelRequest {
   id?: string;
   personalInfo: {
     firstName: string;
@@ -35,12 +56,12 @@ export interface TravelRequest {
 /**
  * Crée une nouvelle demande de voyage
  */
-export async function createTravelRequest(travelData: Omit<TravelRequest, 'id' | 'createdAt' | 'status'>): Promise<string> {
+export async function createTravelRequest(travelData: Omit<TravelRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, 'travelRequests'), {
       ...travelData,
       createdAt: serverTimestamp(),
-      status: 'new'
+      updatedAt: serverTimestamp()
     });
     
     console.log('Demande de voyage créée avec l\'ID:', docRef.id);
