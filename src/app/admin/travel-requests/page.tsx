@@ -13,6 +13,7 @@ import {
   useNewTravelRequests,
   useProcessedTravelRequests
 } from '@/lib/features/admin/travelRequestsSlice';
+import { formatDate } from '@/lib/utils/dateUtils';
 import Link from 'next/link';
 
 export default function AdminTravelRequests() {
@@ -121,7 +122,7 @@ export default function AdminTravelRequests() {
                     </span>
                   </div>
                   <div className="text-sm text-gray-500">
-                    {request.createdAt && new Date(request.createdAt.seconds * 1000).toLocaleDateString('fr-FR')}
+                    {formatDate(request.createdAt)}
                   </div>
                 </div>
 

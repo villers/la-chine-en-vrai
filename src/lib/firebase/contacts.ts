@@ -56,9 +56,12 @@ export async function getRecentContacts(limitCount: number = 50): Promise<Contac
     const contacts: ContactMessage[] = [];
     
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
       contacts.push({
         id: doc.id,
-        ...doc.data()
+        ...data,
+        // Convertir le Timestamp Firebase en Date JavaScript
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt
       } as ContactMessage);
     });
     

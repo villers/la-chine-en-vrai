@@ -88,9 +88,13 @@ export async function getRecentTravelRequests(limitCount: number = 50): Promise<
     const requests: TravelRequest[] = [];
     
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
       requests.push({
         id: doc.id,
-        ...doc.data()
+        ...data,
+        // Convertir les Timestamps Firebase en Date JavaScript
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt
       } as TravelRequest);
     });
     
@@ -117,9 +121,13 @@ export async function getTravelRequestsByStatus(status: string): Promise<TravelR
     const requests: TravelRequest[] = [];
     
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
       requests.push({
         id: doc.id,
-        ...doc.data()
+        ...data,
+        // Convertir les Timestamps Firebase en Date JavaScript
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
+        updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt
       } as TravelRequest);
     });
     

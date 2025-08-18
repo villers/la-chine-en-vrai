@@ -79,9 +79,12 @@ export async function getActiveSubscribers(): Promise<NewsletterSubscriber[]> {
     const subscribers: NewsletterSubscriber[] = [];
     
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
       subscribers.push({
         id: doc.id,
-        ...doc.data()
+        ...data,
+        // Convertir le Timestamp Firebase en Date JavaScript
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt
       } as NewsletterSubscriber);
     });
     
@@ -108,9 +111,12 @@ export async function getRecentSubscribers(limitCount: number = 100): Promise<Ne
     const subscribers: NewsletterSubscriber[] = [];
     
     querySnapshot.forEach((doc) => {
+      const data = doc.data();
       subscribers.push({
         id: doc.id,
-        ...doc.data()
+        ...data,
+        // Convertir le Timestamp Firebase en Date JavaScript
+        createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt
       } as NewsletterSubscriber);
     });
     

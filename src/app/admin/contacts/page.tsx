@@ -13,6 +13,7 @@ import {
   useNewContacts,
   useProcessedContacts
 } from '@/lib/features/admin/contactsSlice';
+import { formatDate } from '@/lib/utils/dateUtils';
 import Link from 'next/link';
 
 export default function AdminContacts() {
@@ -144,7 +145,7 @@ export default function AdminContacts() {
                   </div>
                   <div className="mt-4 flex justify-between items-center">
                     <div className="text-sm text-gray-500">
-                      {contact.createdAt && new Date(contact.createdAt.seconds * 1000).toLocaleDateString('fr-FR')}
+                      {formatDate(contact.createdAt)}
                     </div>
                     <div className="flex space-x-2">
                       {contact.status === 'new' && (

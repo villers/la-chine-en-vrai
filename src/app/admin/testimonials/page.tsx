@@ -13,6 +13,7 @@ import {
   usePublishedTestimonials,
   useUnpublishedTestimonials
 } from '@/lib/features/admin/testimonialsSlice';
+import { formatDate } from '@/lib/utils/dateUtils';
 import Link from 'next/link';
 
 export default function AdminTestimonials() {
@@ -150,7 +151,7 @@ export default function AdminTestimonials() {
                   </div>
                   <div className="mt-4 flex justify-between items-center">
                     <div className="text-sm text-gray-500">
-                      {testimonial.createdAt && new Date(testimonial.createdAt.seconds * 1000).toLocaleDateString('fr-FR')}
+                      {formatDate(testimonial.createdAt)}
                     </div>
                     <div className="flex space-x-2">
                       <button

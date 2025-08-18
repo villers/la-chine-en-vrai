@@ -11,6 +11,7 @@ import {
   useNewsletterLoading,
   useSubscribersThisMonth
 } from '@/lib/features/admin/newsletterSlice';
+import { formatDate } from '@/lib/utils/dateUtils';
 import Link from 'next/link';
 
 export default function AdminNewsletter() {
@@ -137,7 +138,7 @@ export default function AdminNewsletter() {
                             {subscriber.email}
                           </div>
                           <div className="text-sm text-gray-500">
-                            Inscrit le {subscriber.createdAt && new Date(subscriber.createdAt.seconds * 1000).toLocaleDateString('fr-FR')}
+                            Inscrit le {formatDate(subscriber.createdAt)}
                           </div>
                         </div>
                       </div>
