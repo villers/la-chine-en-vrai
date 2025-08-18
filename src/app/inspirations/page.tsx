@@ -1,148 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import Card from '@/components/ui/Card';
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import { fetchInspirations } from '@/lib/features/inspirations/inspirationsSlice';
 import { images } from '@/lib/data/images';
 
-const inspirationCategories = [
-  {
-    id: 'gastronomie',
-    title: 'Gastronomie & Saveurs',
-    description: 'Un voyage culinaire à travers les 8 grandes cuisines chinoises',
-    image: images.inspirations.gastronomie,
-    itineraries: [
-      {
-        title: 'Route des Saveurs du Sichuan',
-        duration: '10 jours',
-        highlights: ['Chengdu', 'Leshan', 'Emeishan'],
-        description: 'Découvrez la cuisine épicée du Sichuan, rencontrez des chefs locaux et apprenez à cuisiner le mapo tofu authentique.',
-        price: 'À partir de 2 200€'
-      },
-      {
-        title: 'Marché de Canton & Dim Sum',
-        duration: '7 jours',
-        highlights: ['Canton', 'Shunde', 'Foshan'],
-        description: 'Explorez les marchés traditionnels et maîtrisez l\'art du dim sum avec des maîtres cuisiniers.',
-        price: 'À partir de 1 800€'
-      }
-    ]
-  },
-  {
-    id: 'culture',
-    title: 'Culture & Traditions',
-    description: 'Plongez dans 5000 ans d\'histoire et de traditions',
-    image: images.inspirations.culture,
-    itineraries: [
-      {
-        title: 'Capitales Impériales',
-        duration: '12 jours',
-        highlights: ['Pékin', 'Xi\'an', 'Luoyang'],
-        description: 'Visitez la Cité Interdite, l\'Armée de Terre Cuite et les grottes de Longmen.',
-        price: 'À partir de 2 800€'
-      },
-      {
-        title: 'Route de la Soie',
-        duration: '15 jours',
-        highlights: ['Dunhuang', 'Turpan', 'Kashgar'],
-        description: 'Suivez les traces de Marco Polo sur l\'ancienne Route de la Soie.',
-        price: 'À partir de 3 200€'
-      }
-    ]
-  },
-  {
-    id: 'nature',
-    title: 'Nature & Paysages',
-    description: 'Des rizières aux sommets enneigés',
-    image: images.inspirations.nature,
-    itineraries: [
-      {
-        title: 'Merveilles de Guilin',
-        duration: '8 jours',
-        highlights: ['Guilin', 'Yangshuo', 'Longji'],
-        description: 'Naviguez sur la rivière Li et découvrez les rizières en terrasses.',
-        price: 'À partir de 1 900€'
-      },
-      {
-        title: 'Tibet & Montagnes Sacrées',
-        duration: '14 jours',
-        highlights: ['Lhassa', 'Shigatse', 'Camp de base Everest'],
-        description: 'Une expérience spirituelle unique sur le toit du monde.',
-        price: 'À partir de 3 800€'
-      }
-    ]
-  },
-  {
-    id: 'villes',
-    title: 'Grandes Métropoles',
-    description: 'L\'effervescence de la Chine moderne',
-    image: images.inspirations.villes,
-    itineraries: [
-      {
-        title: 'Triangle d\'Or : Pékin-Shanghai-Hong Kong',
-        duration: '10 jours',
-        highlights: ['Pékin', 'Shanghai', 'Hong Kong'],
-        description: 'Découvrez trois facettes de la Chine : traditionnelle, moderne et cosmopolite.',
-        price: 'À partir de 2 600€'
-      },
-      {
-        title: 'Innovation & Tech Tour',
-        duration: '8 jours',
-        highlights: ['Shenzhen', 'Hangzhou', 'Shanghai'],
-        description: 'Explorez l\'écosystème tech chinois et visitez les sièges de Tencent, Alibaba.',
-        price: 'À partir de 2 400€'
-      }
-    ]
-  },
-  {
-    id: 'secrets',
-    title: 'Routes Secrètes',
-    description: 'Hors des sentiers battus',
-    image: images.inspirations.secrets,
-    itineraries: [
-      {
-        title: 'Villages Hakka du Fujian',
-        duration: '9 jours',
-        highlights: ['Tulou', 'Yongding', 'Nanjing'],
-        description: 'Découvrez l\'architecture unique des maisons rondes Hakka.',
-        price: 'À partir de 2 100€'
-      },
-      {
-        title: 'Minorités du Yunnan',
-        duration: '12 jours',
-        highlights: ['Kunming', 'Dali', 'Lijiang', 'Shangri-La'],
-        description: 'Rencontrez les 25 minorités ethniques du Yunnan.',
-        price: 'À partir de 2 700€'
-      }
-    ]
-  },
-  {
-    id: 'famille',
-    title: 'Voyage Familial',
-    description: 'Des aventures pour petits et grands',
-    image: images.inspirations.famille,
-    itineraries: [
-      {
-        title: 'Pandas & Merveilles',
-        duration: '10 jours',
-        highlights: ['Chengdu', 'Xi\'an', 'Pékin'],
-        description: 'Rencontrez les pandas géants et explorez la Grande Muraille en famille.',
-        price: 'À partir de 2 400€'
-      },
-      {
-        title: 'Aventure à Shanghai',
-        duration: '6 jours',
-        highlights: ['Shanghai', 'Suzhou'],
-        description: 'Gratte-ciels, parcs d\'attractions et jardins traditionnels.',
-        price: 'À partir de 1 600€'
-      }
-    ]
-  }
-];
-
 export default function Inspirations() {
+  const dispatch = useAppDispatch();
+  const { categories, loading, error } = useAppSelector((state) => state.inspirations);
   const [selectedCategory, setSelectedCategory] = useState('gastronomie');
 
-  const currentCategory = inspirationCategories.find(cat => cat.id === selectedCategory);
+  useEffect(() => {
+    dispatch(fetchInspirations());
+  }, [dispatch]);
+
+  // Set default category when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0].categoryId);
+    }
+  }, [categories, selectedCategory]);
+
+  const currentCategory = categories.find(cat => cat.categoryId === selectedCategory);
 
   return (
     <div>
@@ -157,27 +39,47 @@ export default function Inspirations() {
 
       <section className="py-8 bg-white sticky top-16 z-40 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap justify-center gap-4">
-            {inspirationCategories.map((category) => (
+          {loading && (
+            <div className="flex justify-center items-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+            </div>
+          )}
+
+          {error && (
+            <div className="text-center py-4">
+              <p className="text-red-600 mb-2">Erreur: {error}</p>
               <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === category.id
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700'
-                }`}
+                onClick={() => dispatch(fetchInspirations())}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm"
               >
-                {category.title}
+                Réessayer
               </button>
-            ))}
-          </div>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <div className="flex flex-wrap justify-center gap-4">
+              {categories.map((category) => (
+                <button
+                  key={category.categoryId}
+                  onClick={() => setSelectedCategory(category.categoryId)}
+                  className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedCategory === category.categoryId
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-700'
+                  }`}
+                >
+                  {category.title}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {currentCategory && (
+          {!loading && !error && currentCategory && (
             <>
               <div className="text-center mb-12">
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -216,9 +118,12 @@ export default function Inspirations() {
                         <span className="text-lg font-semibold text-red-600">
                           {itinerary.price}
                         </span>
-                        <button className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                        <Link 
+                          href="/custom-travel"
+                          className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                        >
                           Personnaliser
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -229,14 +134,20 @@ export default function Inspirations() {
                 <p className="text-gray-600 mb-6">
                   Tous nos voyages sont entièrement personnalisables selon vos envies
                 </p>
-                <a
+                <Link
                   href="/custom-travel"
                   className="inline-block bg-red-600 hover:bg-red-700 text-white font-semibold py-4 px-8 rounded-lg text-lg transition-colors"
                 >
                   Créer mon voyage sur mesure
-                </a>
+                </Link>
               </div>
             </>
+          )}
+
+          {!loading && !error && !currentCategory && categories.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">Aucune inspiration disponible pour le moment.</p>
+            </div>
           )}
         </div>
       </section>

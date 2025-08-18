@@ -1,19 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { blogPosts } from '@/lib/data/blogPosts';
+import { useAppDispatch, useAppSelector } from '@/lib/store/hooks';
+import { fetchBlogPosts } from '@/lib/features/blog/blogSlice';
 import { images } from '@/lib/data/images';
 
-const categories = ['Tous', 'Conseils pratiques', 'Gastronomie', 'Culture', 'Voyage', 'Témoignage'];
-
 export default function Blog() {
+  const dispatch = useAppDispatch();
+  const { posts, loading, error, categories } = useAppSelector((state) => state.blog);
   const [selectedCategory, setSelectedCategory] = useState('Tous');
-  
-  const filteredPosts = selectedCategory === 'Tous' 
-    ? blogPosts 
-    : blogPosts.filter(post => post.category === selectedCategory);
+
+  useEffect(() => {
+    dispatch(fetchBlogPosts({ limit: 20, category: selectedCategory }));
+  }, [dispatch, selectedCategory]);
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+  };
 
   return (
     <div>
@@ -32,7 +37,7 @@ export default function Blog() {
             {categories.map((category) => (
               <button
                 key={category}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => handleCategoryChange(category)}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category
                     ? 'bg-red-600 text-white'
@@ -48,67 +53,89 @@ export default function Blog() {
 
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post) => (
-              <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
-                <div className="relative h-48 w-full overflow-hidden">
-                  <Image
-                    src={post.image || images.blog.guide}
-                    alt={post.title}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-700"
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      {post.category}
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-gray-500">{post.readingTime}</span>
-                  </div>
-                  
-                  <h2 className="text-xl font-semibold text-gray-900 mb-3">
-                    <Link href={`/blog/${post.id}`} className="hover:text-red-600 transition-colors">
-                      {post.title}
-                    </Link>
-                  </h2>
-                  
-                  <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-500">
-                      <span>Par {post.author}</span>
-                      <span className="mx-2">•</span>
-                      <span>{new Date(post.publishedAt).toLocaleDateString('fr-FR', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4">
-                    <Link 
-                      href={`/blog/${post.id}`}
-                      className="text-red-600 font-medium hover:text-red-700 transition-colors"
-                    >
-                      Lire la suite →
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {filteredPosts.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-600 text-lg">Aucun article trouvé pour cette catégorie.</p>
+          {loading && (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
             </div>
+          )}
+
+          {error && (
+            <div className="text-center py-12">
+              <p className="text-red-600 text-lg mb-4">Erreur: {error}</p>
+              <button
+                onClick={() => dispatch(fetchBlogPosts({ limit: 20, category: selectedCategory }))}
+                className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg"
+              >
+                Réessayer
+              </button>
+            </div>
+          )}
+
+          {!loading && !error && (
+            <>
+              {posts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {posts.map((post) => (
+                    <article key={post.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group">
+                      <div className="relative h-48 w-full overflow-hidden">
+                        <Image
+                          src={post.image || images.blog.guide}
+                          alt={post.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+                            {post.category}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="p-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm text-gray-500">{post.readingTime}</span>
+                        </div>
+                        
+                        <h2 className="text-xl font-semibold text-gray-900 mb-3">
+                          <Link href={`/blog/${post.slug || post.id}`} className="hover:text-red-600 transition-colors">
+                            {post.title}
+                          </Link>
+                        </h2>
+                        
+                        <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <span>Par {post.author}</span>
+                            <span className="mx-2">•</span>
+                            <span>{post.publishedAt ? new Date(post.publishedAt.seconds ? post.publishedAt.seconds * 1000 : post.publishedAt).toLocaleDateString('fr-FR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            }) : 'Date non disponible'}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-4">
+                          <Link 
+                            href={`/blog/${post.slug || post.id}`}
+                            className="text-red-600 font-medium hover:text-red-700 transition-colors"
+                          >
+                            Lire la suite →
+                          </Link>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 text-lg">Aucun article trouvé pour cette catégorie.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>

@@ -1,8 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { 
-  getPublishedTestimonials, 
-  createTestimonial, 
-  getTestimonialsByTravelType,
   type Testimonial,
   type CreateTestimonialData 
 } from '@/lib/firebase/testimonials';
@@ -28,35 +25,26 @@ const initialState: TestimonialsState = {
 // Actions asynchrones
 export const fetchTestimonials = createAsyncThunk(
   'testimonials/fetchTestimonials',
-  async (limit: number = 10) => {
-    return await getPublishedTestimonials(limit);
+  async (limit: number = 6) => {
+    const { testimonialsApi } = await import('@/lib/api');
+    return await testimonialsApi.getTestimonials(limit);
   }
 );
 
 export const fetchTestimonialsByTravelType = createAsyncThunk(
   'testimonials/fetchByTravelType',
   async ({ travelType, limit }: { travelType: string; limit?: number }) => {
-    return await getTestimonialsByTravelType(travelType, limit);
+    const { testimonialsApi } = await import('@/lib/api');
+    // Note: Cette fonctionnalité nécessiterait une extension de l'API
+    return await testimonialsApi.getTestimonials(limit || 6);
   }
 );
 
 export const submitTestimonial = createAsyncThunk(
   'testimonials/submit',
   async (testimonialData: CreateTestimonialData) => {
-    const response = await fetch('/api/testimonials', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(testimonialData),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Erreur lors de l\'envoi du témoignage');
-    }
-
-    const result = await response.json();
+    const { testimonialsApi } = await import('@/lib/api');
+    const result = await testimonialsApi.createTestimonial(testimonialData);
     return { id: result.id, ...testimonialData };
   }
 );

@@ -17,19 +17,9 @@ const initialState: NewsletterState = {
 export const subscribeToNewsletter = createAsyncThunk(
   'newsletter/subscribe',
   async (email: string) => {
-    const response = await fetch('/api/newsletter', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'inscription à la newsletter');
-    }
-
-    return await response.json();
+    const { newsletterApi } = await import('@/lib/api');
+    const message = await newsletterApi.subscribe(email);
+    return { message };
   }
 );
 

@@ -1,31 +1,45 @@
 import { NextResponse } from 'next/server';
+import { addNewsletterSubscriber } from '@/lib/firebase/newsletter';
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
+    const { email, source } = await request.json();
     
     // Validation de l'email
-    if (!email || !email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email)) {
       return NextResponse.json(
         { error: 'Adresse email invalide' },
         { status: 400 }
       );
     }
 
-    // Ici, vous pouvez intégrer avec un service de newsletter
-    // (Mailchimp, ConvertKit, SendGrid, etc.)
-    console.log('Nouvelle inscription newsletter:', email);
+    // Ajouter l'abonné à la newsletter dans Firebase
+    const subscriberId = await addNewsletterSubscriber(email, source || 'website');
 
-    // TODO: Intégrer avec votre service de newsletter
-    // await addToNewsletter(email);
+    console.log('Nouvelle inscription newsletter sauvegardée:', {
+      id: subscriberId,
+      email,
+      source: source || 'website'
+    });
 
     return NextResponse.json({
       success: true,
-      message: 'Inscription réussie à la newsletter'
+      message: 'Inscription réussie à la newsletter',
+      id: subscriberId
     });
 
   } catch (error) {
     console.error('Erreur lors de l\'inscription newsletter:', error);
+    
+    // Gestion spécifique de l'erreur d'email déjà existant
+    if (error instanceof Error && error.message.includes('déjà inscrite')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 409 } // Conflict
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Une erreur est survenue lors de l\'inscription' },
       { status: 500 }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createTravelRequest } from '@/lib/firebase/travelRequests';
 
 export async function POST(request: Request) {
   try {
@@ -12,9 +13,32 @@ export async function POST(request: Request) {
       );
     }
 
-    // Ici, vous pouvez intégrer avec un service email (SendGrid, Resend, etc.)
-    // ou sauvegarder en base de données
-    console.log('Nouvelle demande de voyage:', {
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.personalInfo.email)) {
+      return NextResponse.json(
+        { error: 'Adresse email invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Validation des champs obligatoires
+    if (!formData.destination || formData.destination.length === 0) {
+      return NextResponse.json(
+        { error: 'Veuillez sélectionner au moins une destination' },
+        { status: 400 }
+      );
+    }
+
+    if (!formData.travelType || formData.travelType.length === 0) {
+      return NextResponse.json(
+        { error: 'Veuillez sélectionner au moins un type de voyage' },
+        { status: 400 }
+      );
+    }
+
+    // Sauvegarder la demande de voyage dans Firebase
+    const travelRequestId = await createTravelRequest({
       personalInfo: formData.personalInfo,
       destination: formData.destination,
       travelType: formData.travelType,
@@ -25,35 +49,19 @@ export async function POST(request: Request) {
       accommodation: formData.accommodation,
     });
 
-    // Simulation d'envoi d'email
-    const emailContent = `
-      Nouvelle demande de voyage sur mesure:
-      
-      Client: ${formData.personalInfo.firstName} ${formData.personalInfo.lastName}
-      Email: ${formData.personalInfo.email}
-      Téléphone: ${formData.personalInfo.phone || 'Non renseigné'}
-      
-      Destinations souhaitées: ${formData.destination.join(', ')}
-      Types de voyage: ${formData.travelType.join(', ')}
-      Budget: ${formData.budget}
-      Durée: ${formData.duration}
-      Nombre de voyageurs: ${formData.travelers}
-      Hébergement: ${formData.accommodation}
-      Centres d'intérêt: ${formData.interests.join(', ')}
-      
-      Message: ${formData.personalInfo.message || 'Aucun message spécifique'}
-    `;
-
-    // TODO: Intégrer avec votre service d'email préféré
-    // await sendEmail({
-    //   to: 'contact@votre-agence.com',
-    //   subject: 'Nouvelle demande de voyage sur mesure',
-    //   text: emailContent
-    // });
+    // Log de la demande de voyage
+    console.log('Nouvelle demande de voyage sauvegardée:', {
+      id: travelRequestId,
+      client: `${formData.personalInfo.firstName} ${formData.personalInfo.lastName}`,
+      email: formData.personalInfo.email,
+      destinations: formData.destination,
+      budget: formData.budget
+    });
 
     return NextResponse.json({
       success: true,
-      message: 'Votre demande a été envoyée avec succès'
+      message: 'Votre demande a été envoyée avec succès',
+      id: travelRequestId
     });
 
   } catch (error) {

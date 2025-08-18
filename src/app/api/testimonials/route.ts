@@ -55,9 +55,35 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
-  return NextResponse.json(
-    { message: 'Utilisez POST pour envoyer un témoignage' },
-    { status: 405 }
-  );
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const limitParam = searchParams.get('limit');
+    const travelTypeParam = searchParams.get('travelType');
+    const limit = limitParam ? parseInt(limitParam) : 6;
+
+    // Import dynamique pour éviter les erreurs côté serveur
+    const { getPublishedTestimonials, getTestimonialsByTravelType } = await import('@/lib/firebase/testimonials');
+    
+    let testimonials;
+    
+    if (travelTypeParam) {
+      testimonials = await getTestimonialsByTravelType(travelTypeParam, limit);
+    } else {
+      testimonials = await getPublishedTestimonials(limit);
+    }
+    
+    return NextResponse.json({
+      success: true,
+      testimonials,
+      count: testimonials.length
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la récupération des témoignages:', error);
+    return NextResponse.json(
+      { error: 'Une erreur est survenue lors de la récupération des témoignages' },
+      { status: 500 }
+    );
+  }
 }

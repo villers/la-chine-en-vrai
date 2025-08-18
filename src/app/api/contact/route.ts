@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createContact } from '@/lib/firebase/contacts';
 
 export async function POST(request: Request) {
   try {
@@ -12,8 +13,25 @@ export async function POST(request: Request) {
       );
     }
 
-    // Log de la demande de contact
-    console.log('Nouvelle demande de contact:', {
+    // Validation de l'email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Adresse email invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Validation de la longueur du message
+    if (message.length < 10) {
+      return NextResponse.json(
+        { error: 'Le message doit contenir au moins 10 caractères' },
+        { status: 400 }
+      );
+    }
+
+    // Sauvegarder le message de contact dans Firebase
+    const contactId = await createContact({
       firstName,
       lastName,
       email,
@@ -22,29 +40,19 @@ export async function POST(request: Request) {
       message
     });
 
-    // Simulation d'envoi d'email
-    const emailContent = `
-      Nouvelle demande de contact:
-      
-      Nom: ${firstName} ${lastName}
-      Email: ${email}
-      Téléphone: ${phone || 'Non renseigné'}
-      Sujet: ${subject || 'Demande générale'}
-      
-      Message:
-      ${message}
-    `;
-
-    // TODO: Intégrer avec votre service d'email
-    // await sendEmail({
-    //   to: 'contact@votre-agence.com',
-    //   subject: `Nouvelle demande: ${subject || 'Contact général'}`,
-    //   text: emailContent
-    // });
+    // Log de la demande de contact
+    console.log('Nouvelle demande de contact sauvegardée:', {
+      id: contactId,
+      firstName,
+      lastName,
+      email,
+      subject
+    });
 
     return NextResponse.json({
       success: true,
-      message: 'Votre message a été envoyé avec succès'
+      message: 'Votre message a été envoyé avec succès',
+      id: contactId
     });
 
   } catch (error) {

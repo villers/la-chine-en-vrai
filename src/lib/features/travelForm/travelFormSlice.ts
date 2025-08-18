@@ -61,19 +61,27 @@ const initialState: TravelFormState = {
 export const submitTravelForm = createAsyncThunk(
   'travelForm/submit',
   async (formData: TravelFormData) => {
-    const response = await fetch('/api/travel-form', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (!response.ok) {
-      throw new Error('Erreur lors de l\'envoi du formulaire');
-    }
-
-    return await response.json();
+    const { contactApi } = await import('@/lib/api');
+    
+    // Convertir le format du formulaire vers le format API
+    const travelRequestData = {
+      firstName: formData.personalInfo.firstName,
+      lastName: formData.personalInfo.lastName,
+      email: formData.personalInfo.email,
+      phone: formData.personalInfo.phone,
+      destinations: formData.destination,
+      duration: formData.duration,
+      budget: formData.budget,
+      travelers: formData.travelers,
+      travelStyle: formData.travelType.join(', '),
+      departureDate: formData.travelDates.departure,
+      interests: formData.interests,
+      accommodationType: formData.accommodation,
+      hasSpecialRequests: !!formData.personalInfo.message,
+      specialRequests: formData.personalInfo.message,
+    };
+    
+    return await contactApi.sendTravelRequest(travelRequestData);
   }
 );
 
