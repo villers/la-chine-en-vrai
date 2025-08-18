@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { useAppSelector } from '@/lib/store/hooks';
 import { 
   type Testimonial,
   type CreateTestimonialData 
@@ -113,4 +114,30 @@ const testimonialsSlice = createSlice({
 });
 
 export const { clearSubmitStatus, clearError } = testimonialsSlice.actions;
+
+// Hooks personnalisés avec useAppSelector
+export const useTestimonials = () => useAppSelector((state) => state.testimonials.testimonials);
+export const useTestimonialsLoading = () => useAppSelector((state) => state.testimonials.loading);
+export const useTestimonialsError = () => useAppSelector((state) => state.testimonials.error);
+export const useTestimonialsSubmitting = () => useAppSelector((state) => state.testimonials.submitting);
+export const useTestimonialsSubmitStatus = () => useAppSelector((state) => state.testimonials.submitStatus);
+export const useTestimonialsSubmitMessage = () => useAppSelector((state) => state.testimonials.submitMessage);
+export const useTestimonialsByRating = (rating: number) => useAppSelector((state) => 
+  state.testimonials.testimonials.filter(testimonial => testimonial.rating >= rating)
+);
+export const useFeaturedTestimonials = (limit: number = 3) => useAppSelector((state) => 
+  state.testimonials.testimonials.slice(0, limit)
+);
+export const useTestimonialsStats = () => useAppSelector((state) => {
+  const testimonials = state.testimonials.testimonials;
+  const totalRating = testimonials.reduce((sum, t) => sum + t.rating, 0);
+  const averageRating = testimonials.length > 0 ? totalRating / testimonials.length : 0;
+  return {
+    total: testimonials.length,
+    averageRating: Math.round(averageRating * 10) / 10,
+    fiveStars: testimonials.filter(t => t.rating === 5).length,
+    fourStars: testimonials.filter(t => t.rating >= 4).length
+  };
+});
+
 export default testimonialsSlice.reducer;

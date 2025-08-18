@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { useAppSelector } from '@/lib/store/hooks';
 
 export interface Itinerary {
   title: string;
@@ -94,4 +95,20 @@ const inspirationsSlice = createSlice({
 });
 
 export const { clearCurrentCategory, clearError } = inspirationsSlice.actions;
+
+// Hooks personnalisés avec useAppSelector
+export const useInspirationCategories = () => useAppSelector((state) => state.inspirations.categories);
+export const useInspirationCurrentCategory = () => useAppSelector((state) => state.inspirations.currentCategory);
+export const useInspirationsLoading = () => useAppSelector((state) => state.inspirations.loading);
+export const useInspirationsError = () => useAppSelector((state) => state.inspirations.error);
+export const useActiveInspirations = () => useAppSelector((state) => 
+  state.inspirations.categories.filter(category => category.isActive !== false)
+);
+export const useInspirationByCategoryId = (categoryId: string) => useAppSelector((state) => 
+  state.inspirations.categories.find(category => category.categoryId === categoryId)
+);
+export const useFeaturedInspirations = (limit: number = 3) => useAppSelector((state) => 
+  state.inspirations.categories.slice(0, limit)
+);
+
 export default inspirationsSlice.reducer;

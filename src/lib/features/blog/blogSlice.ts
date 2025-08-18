@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { useAppSelector } from '@/lib/store/hooks';
 
 export interface BlogPost {
   id?: string;
@@ -96,4 +97,20 @@ const blogSlice = createSlice({
 });
 
 export const { clearCurrentPost, clearError } = blogSlice.actions;
+
+// Hooks personnalisés avec useAppSelector
+export const useBlogPosts = () => useAppSelector((state) => state.blog.posts);
+export const useBlogCurrentPost = () => useAppSelector((state) => state.blog.currentPost);
+export const useBlogLoading = () => useAppSelector((state) => state.blog.loading);
+export const useBlogError = () => useAppSelector((state) => state.blog.error);
+export const useBlogCategories = () => useAppSelector((state) => state.blog.categories);
+export const useBlogPostsByCategory = (category: string) => useAppSelector((state) => 
+  category === 'Tous' 
+    ? state.blog.posts 
+    : state.blog.posts.filter(post => post.category === category)
+);
+export const useRecentBlogPosts = (limit: number = 3) => useAppSelector((state) => 
+  state.blog.posts.slice(0, limit)
+);
+
 export default blogSlice.reducer;

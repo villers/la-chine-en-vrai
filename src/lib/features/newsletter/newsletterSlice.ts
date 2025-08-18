@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { useAppSelector } from '@/lib/store/hooks';
 
 interface NewsletterState {
   email: string;
@@ -62,4 +63,14 @@ const newsletterSlice = createSlice({
 });
 
 export const { setEmail, clearStatus, resetNewsletter } = newsletterSlice.actions;
+
+// Hooks personnalisés avec useAppSelector
+export const useNewsletterEmail = () => useAppSelector((state) => state.newsletter.email);
+export const useNewsletterSubscribing = () => useAppSelector((state) => state.newsletter.isSubscribing);
+export const useNewsletterStatus = () => useAppSelector((state) => state.newsletter.subscriptionStatus);
+export const useNewsletterMessage = () => useAppSelector((state) => state.newsletter.message);
+export const useNewsletterSuccess = () => useAppSelector((state) => state.newsletter.subscriptionStatus === 'success');
+export const useNewsletterError = () => useAppSelector((state) => state.newsletter.subscriptionStatus === 'error');
+export const useNewsletterPending = () => useAppSelector((state) => state.newsletter.subscriptionStatus === 'pending');
+
 export default newsletterSlice.reducer;

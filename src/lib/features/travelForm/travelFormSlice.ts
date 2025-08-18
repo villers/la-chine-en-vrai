@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { useAppSelector } from '@/lib/store/hooks';
 
 export interface TravelFormData {
   destination: string[];
@@ -144,5 +145,29 @@ export const {
   resetForm,
   clearSubmitStatus,
 } = travelFormSlice.actions;
+
+// Hooks personnalisés avec useAppSelector
+export const useTravelFormData = () => useAppSelector((state) => state.travelForm.formData);
+export const useTravelFormCurrentStep = () => useAppSelector((state) => state.travelForm.currentStep);
+export const useTravelFormSubmitting = () => useAppSelector((state) => state.travelForm.isSubmitting);
+export const useTravelFormSubmitStatus = () => useAppSelector((state) => state.travelForm.submitStatus);
+export const useTravelFormSubmitMessage = () => useAppSelector((state) => state.travelForm.submitMessage);
+export const useTravelFormPersonalInfo = () => useAppSelector((state) => state.travelForm.formData.personalInfo);
+export const useTravelFormDestinations = () => useAppSelector((state) => state.travelForm.formData.destination);
+export const useTravelFormDates = () => useAppSelector((state) => state.travelForm.formData.travelDates);
+export const useTravelFormBudget = () => useAppSelector((state) => state.travelForm.formData.budget);
+export const useTravelFormIsValid = () => useAppSelector((state) => {
+  const { formData } = state.travelForm;
+  return (
+    formData.destination.length > 0 &&
+    formData.personalInfo.firstName.trim() !== '' &&
+    formData.personalInfo.lastName.trim() !== '' &&
+    formData.personalInfo.email.trim() !== ''
+  );
+});
+export const useTravelFormProgress = () => useAppSelector((state) => {
+  const totalSteps = 5; // Ajustez selon le nombre d'étapes
+  return Math.round((state.travelForm.currentStep / totalSteps) * 100);
+});
 
 export default travelFormSlice.reducer;
