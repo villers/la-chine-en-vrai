@@ -1,27 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { adminContactsApi } from '@/lib/api/admin';
+import { RootState, AppDispatch } from '@/lib/store/store';
+import { 
+  fetchContacts, 
+  markContactAsProcessed, 
+  deleteContact as deleteContactAction 
+} from '@/lib/features/admin/adminSlice';
 import Link from 'next/link';
-
-interface Contact {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  subject: string;
-  message: string;
-  status: 'new' | 'processed';
-  createdAt: any;
-}
 
 export default function AdminContacts() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const { contacts, contactsLoading: loadingData } = useSelector(
+    (state: RootState) => state.admin
+  );
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -31,42 +29,20 @@ export default function AdminContacts() {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchContacts();
+      dispatch(fetchContacts());
     }
-  }, [isAdmin]);
+  }, [isAdmin, dispatch]);
 
-  const fetchContacts = async () => {
-    try {
-      const data = await adminContactsApi.getAllContacts();
-      setContacts(Array.isArray(data.contacts) ? data.contacts : []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des contacts:', error);
-      setContacts([]);
-    } finally {
-      setLoadingData(false);
-    }
+  const handleMarkAsProcessed = async (id: string) => {
+    await dispatch(markContactAsProcessed(id));
   };
 
-  const markAsProcessed = async (id: string) => {
-    try {
-      await adminContactsApi.markContactAsProcessed(id);
-      await fetchContacts(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-    }
-  };
-
-  const deleteContact = async (id: string) => {
+  const handleDeleteContact = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce contact ?')) {
       return;
     }
 
-    try {
-      await adminContactsApi.deleteContact(id);
-      await fetchContacts(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-    }
+    await dispatch(deleteContactAction(id));
   };
 
   if (loading || loadingData) {
@@ -169,14 +145,14 @@ export default function AdminContacts() {
                     <div className="flex space-x-2">
                       {contact.status === 'new' && (
                         <button
-                          onClick={() => markAsProcessed(contact.id)}
+                          onClick={() => handleMarkAsProcessed(contact.id)}
                           className="px-3 py-1 bg-green-100 text-green-800 hover:bg-green-200 rounded text-sm font-medium"
                         >
                           Marquer comme traité
                         </button>
                       )}
                       <button
-                        onClick={() => deleteContact(contact.id)}
+                        onClick={() => handleDeleteContact(contact.id)}
                         className="px-3 py-1 bg-red-100 text-red-800 hover:bg-red-200 rounded text-sm font-medium"
                       >
                         Supprimer

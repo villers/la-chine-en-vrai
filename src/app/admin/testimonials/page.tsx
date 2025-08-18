@@ -1,26 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { adminTestimonialsApi } from '@/lib/api/admin';
+import { RootState, AppDispatch } from '@/lib/store/store';
+import { 
+  fetchTestimonials, 
+  updateTestimonial, 
+  deleteTestimonial as deleteTestimonialAction 
+} from '@/lib/features/admin/adminSlice';
 import Link from 'next/link';
-
-interface Testimonial {
-  id: string;
-  name: string;
-  location: string;
-  rating: number;
-  text: string;
-  isPublished: boolean;
-  createdAt: any;
-}
 
 export default function AdminTestimonials() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const { testimonials, testimonialsLoading: loadingData } = useSelector(
+    (state: RootState) => state.admin
+  );
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -30,42 +29,20 @@ export default function AdminTestimonials() {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchTestimonials();
+      dispatch(fetchTestimonials());
     }
-  }, [isAdmin]);
-
-  const fetchTestimonials = async () => {
-    try {
-      const testimonials = await adminTestimonialsApi.getAllTestimonials();
-      setTestimonials(Array.isArray(testimonials) ? testimonials : []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des témoignages:', error);
-      setTestimonials([]);
-    } finally {
-      setLoadingData(false);
-    }
-  };
+  }, [isAdmin, dispatch]);
 
   const togglePublished = async (id: string, currentStatus: boolean) => {
-    try {
-      await adminTestimonialsApi.updateTestimonial(id, { isPublished: !currentStatus });
-      await fetchTestimonials(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-    }
+    await dispatch(updateTestimonial({ id, updates: { isPublished: !currentStatus } }));
   };
 
-  const deleteTestimonial = async (id: string) => {
+  const handleDeleteTestimonial = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce témoignage ?')) {
       return;
     }
 
-    try {
-      await adminTestimonialsApi.deleteTestimonial(id);
-      await fetchTestimonials(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-    }
+    await dispatch(deleteTestimonialAction(id));
   };
 
   if (loading || loadingData) {
@@ -183,7 +160,7 @@ export default function AdminTestimonials() {
                         {testimonial.isPublished ? 'Masquer' : 'Publier'}
                       </button>
                       <button
-                        onClick={() => deleteTestimonial(testimonial.id)}
+                        onClick={() => handleDeleteTestimonial(testimonial.id)}
                         className="px-3 py-1 bg-red-100 text-red-800 hover:bg-red-200 rounded text-sm font-medium"
                       >
                         Supprimer

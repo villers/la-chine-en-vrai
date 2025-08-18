@@ -1,34 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { adminTravelRequestsApi } from '@/lib/api/admin';
+import { RootState, AppDispatch } from '@/lib/store/store';
+import { 
+  fetchTravelRequests, 
+  markTravelRequestAsProcessed, 
+  deleteTravelRequest as deleteTravelRequestAction 
+} from '@/lib/features/admin/adminSlice';
 import Link from 'next/link';
-
-interface TravelRequest {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  destination: string;
-  duration: string;
-  startDate: string;
-  travelers: number;
-  budget: string;
-  interests: string[];
-  accommodationType: string;
-  transportPreference: string;
-  specialRequests?: string;
-  status: 'new' | 'processed';
-  createdAt: any;
-}
 
 export default function AdminTravelRequests() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const [travelRequests, setTravelRequests] = useState<TravelRequest[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const { travelRequests, travelRequestsLoading: loadingData } = useSelector(
+    (state: RootState) => state.admin
+  );
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -38,42 +29,20 @@ export default function AdminTravelRequests() {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchTravelRequests();
+      dispatch(fetchTravelRequests());
     }
-  }, [isAdmin]);
+  }, [isAdmin, dispatch]);
 
-  const fetchTravelRequests = async () => {
-    try {
-      const data = await adminTravelRequestsApi.getAllTravelRequests();
-      setTravelRequests(Array.isArray(data.travelRequests) ? data.travelRequests : []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des demandes:', error);
-      setTravelRequests([]);
-    } finally {
-      setLoadingData(false);
-    }
+  const handleMarkAsProcessed = async (id: string) => {
+    await dispatch(markTravelRequestAsProcessed(id));
   };
 
-  const markAsProcessed = async (id: string) => {
-    try {
-      await adminTravelRequestsApi.markTravelRequestAsProcessed(id);
-      await fetchTravelRequests(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-    }
-  };
-
-  const deleteTravelRequest = async (id: string) => {
+  const handleDeleteTravelRequest = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette demande de voyage ?')) {
       return;
     }
 
-    try {
-      await adminTravelRequestsApi.deleteTravelRequest(id);
-      await fetchTravelRequests(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-    }
+    await dispatch(deleteTravelRequestAction(id));
   };
 
   if (loading || loadingData) {
@@ -201,14 +170,14 @@ export default function AdminTravelRequests() {
                 <div className="mt-6 flex justify-end space-x-3">
                   {request.status === 'new' && (
                     <button
-                      onClick={() => markAsProcessed(request.id)}
+                      onClick={() => handleMarkAsProcessed(request.id)}
                       className="bg-green-100 text-green-800 hover:bg-green-200 px-3 py-1 rounded text-sm font-medium"
                     >
                       Marquer comme traitée
                     </button>
                   )}
                   <button
-                    onClick={() => deleteTravelRequest(request.id)}
+                    onClick={() => handleDeleteTravelRequest(request.id)}
                     className="bg-red-100 text-red-800 hover:bg-red-200 px-3 py-1 rounded text-sm font-medium"
                   >
                     Supprimer

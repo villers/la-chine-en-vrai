@@ -4,6 +4,7 @@ import newsletterReducer from '../features/newsletter/newsletterSlice';
 import testimonialsReducer from '../features/testimonials/testimonialsSlice';
 import blogReducer from '../features/blog/blogSlice';
 import inspirationsReducer from '../features/inspirations/inspirationsSlice';
+import adminReducer from '../features/admin/adminSlice';
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     testimonials: testimonialsReducer,
     blog: blogReducer,
     inspirations: inspirationsReducer,
+    admin: adminReducer,
   },
 });
 

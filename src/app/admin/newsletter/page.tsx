@@ -1,22 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from 'react-redux';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { adminNewsletterApi } from '@/lib/api/admin';
+import { RootState, AppDispatch } from '@/lib/store/store';
+import { 
+  fetchSubscribers, 
+  deleteSubscriber as deleteSubscriberAction 
+} from '@/lib/features/admin/adminSlice';
 import Link from 'next/link';
-
-interface Subscriber {
-  id: string;
-  email: string;
-  createdAt: any;
-}
 
 export default function AdminNewsletter() {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
-  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const dispatch = useDispatch<AppDispatch>();
+  
+  const { subscribers, newsletterLoading: loadingData } = useSelector(
+    (state: RootState) => state.admin
+  );
 
   useEffect(() => {
     if (!loading && !isAdmin) {
@@ -26,33 +28,16 @@ export default function AdminNewsletter() {
 
   useEffect(() => {
     if (isAdmin) {
-      fetchSubscribers();
+      dispatch(fetchSubscribers());
     }
-  }, [isAdmin]);
+  }, [isAdmin, dispatch]);
 
-  const fetchSubscribers = async () => {
-    try {
-      const data = await adminNewsletterApi.getAllSubscribers();
-      setSubscribers(Array.isArray(data.subscribers) ? data.subscribers : []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des abonnés:', error);
-      setSubscribers([]);
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
-  const deleteSubscriber = async (id: string) => {
+  const handleDeleteSubscriber = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet abonné ?')) {
       return;
     }
 
-    try {
-      await adminNewsletterApi.deleteSubscriber(id);
-      await fetchSubscribers(); // Recharger la liste
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-    }
+    await dispatch(deleteSubscriberAction(id));
   };
 
   const exportEmails = () => {
@@ -161,7 +146,7 @@ export default function AdminNewsletter() {
                     </div>
                     <div className="flex-shrink-0">
                       <button
-                        onClick={() => deleteSubscriber(subscriber.id)}
+                        onClick={() => handleDeleteSubscriber(subscriber.id)}
                         className="text-red-600 hover:text-red-800 text-sm font-medium"
                       >
                         Supprimer
