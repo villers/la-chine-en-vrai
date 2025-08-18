@@ -13,7 +13,7 @@ export default function Hero({ title, subtitle, ctaText, ctaLink, backgroundImag
   return (
     <section className="relative h-screen flex items-center justify-center text-white overflow-hidden">
       {backgroundImage ? (
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 z-0">
           <Image
             src={backgroundImage}
             alt="Hero background"
@@ -21,8 +21,9 @@ export default function Hero({ title, subtitle, ctaText, ctaLink, backgroundImag
             className="object-cover"
             priority
             quality={90}
+            sizes="100vw"
           />
-          <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+          <div className="absolute inset-0 bg-black/20 z-10"></div>
         </div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-red-700 via-red-600 to-red-800">
@@ -30,7 +31,7 @@ export default function Hero({ title, subtitle, ctaText, ctaLink, backgroundImag
         </div>
       )}
       
-      <div className="relative z-10 text-center max-w-4xl mx-auto px-4">
+      <div className="relative z-20 text-center max-w-4xl mx-auto px-4">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
           {title}
         </h1>
@@ -45,7 +46,7 @@ export default function Hero({ title, subtitle, ctaText, ctaLink, backgroundImag
         </Link>
       </div>
 
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-20">
         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
