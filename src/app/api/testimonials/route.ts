@@ -60,24 +60,25 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit');
     const travelTypeParam = searchParams.get('travelType');
+    const includeUnpublished = searchParams.get('includeUnpublished');
     const limit = limitParam ? parseInt(limitParam) : 6;
 
     // Import dynamique pour éviter les erreurs côté serveur
-    const { getPublishedTestimonials, getTestimonialsByTravelType } = await import('@/lib/firebase/testimonials');
+    const { getPublishedTestimonials, getTestimonialsByTravelType, getAllTestimonials } = await import('@/lib/firebase/testimonials');
     
     let testimonials;
     
-    if (travelTypeParam) {
+    if (includeUnpublished === 'true') {
+      // Pour l'admin, récupérer tous les témoignages
+      testimonials = await getAllTestimonials();
+    } else if (travelTypeParam) {
       testimonials = await getTestimonialsByTravelType(travelTypeParam, limit);
     } else {
       testimonials = await getPublishedTestimonials(limit);
     }
     
-    return NextResponse.json({
-      success: true,
-      testimonials,
-      count: testimonials.length
-    });
+    // Renvoyer directement le tableau pour simplifier l'usage
+    return NextResponse.json(testimonials);
 
   } catch (error) {
     console.error('Erreur lors de la récupération des témoignages:', error);

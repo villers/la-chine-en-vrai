@@ -22,10 +22,10 @@ export interface TestimonialsResponse {
 export const testimonialsApi = {
   // Récupérer tous les témoignages
   getTestimonials: async (limit: number = 6): Promise<Testimonial[]> => {
-    const response = await apiClient.get<TestimonialsResponse>('/api/testimonials', {
+    const response = await apiClient.get<Testimonial[]>('/api/testimonials', {
       params: { limit }
     });
-    return response.data.testimonials;
+    return response.data;
   },
 
   // Créer un nouveau témoignage

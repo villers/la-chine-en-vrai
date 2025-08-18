@@ -1,129 +1,134 @@
 'use client';
 
-import { useState } from 'react';
-import { seedTestimonials } from '@/lib/firebase/seedData';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/hooks/useAuth';
+import Link from 'next/link';
 
-export default function AdminPage() {
-  const [isSeeding, setIsSeeding] = useState(false);
-  const [seedResult, setSeedResult] = useState<string>('');
+export default function AdminDashboard() {
+  const { user, loading, logout, isAdmin } = useAuth();
+  const router = useRouter();
 
-  const handleSeedData = async () => {
-    setIsSeeding(true);
-    setSeedResult('');
-    
+  useEffect(() => {
+    if (!loading && !isAdmin) {
+      router.push('/admin/login');
+    }
+  }, [loading, isAdmin, router]);
+
+  const handleLogout = async () => {
     try {
-      await seedTestimonials();
-      setSeedResult('✅ Données de test ajoutées avec succès !');
+      await logout();
+      router.push('/admin/login');
     } catch (error) {
-      setSeedResult('❌ Erreur lors de l\'ajout des données : ' + (error as Error).message);
-    } finally {
-      setIsSeeding(false);
+      console.error('Erreur de déconnexion:', error);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">
-            🔧 Administration - Développement
-          </h1>
-
-          <div className="space-y-6">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h2 className="text-lg font-semibold text-yellow-800 mb-2">
-                ⚠️ Page d'administration de développement
-              </h2>
-              <p className="text-yellow-700">
-                Cette page est destinée au développement local uniquement. 
-                Elle ne devrait pas être accessible en production.
-              </p>
+      {/* Header Admin */}
+      <header className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <h1 className="text-3xl font-bold text-gray-900">
+                Administration
+              </h1>
             </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <h3 className="text-xl font-semibold text-blue-900 mb-4">
-                Firebase Emulator
-              </h3>
-              <p className="text-blue-700 mb-4">
-                Pour utiliser l'émulateur Firebase, exécutez dans un terminal séparé :
-              </p>
-              <code className="bg-blue-100 text-blue-800 px-3 py-2 rounded block">
-                firebase emulators:start
-              </code>
-              <p className="text-blue-700 mt-2 text-sm">
-                L'interface d'administration sera disponible sur http://localhost:4000
-              </p>
-            </div>
-
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-              <h3 className="text-xl font-semibold text-green-900 mb-4">
-                Données de test
-              </h3>
-              <p className="text-green-700 mb-4">
-                Ajoutez des témoignages de démonstration à la base de données locale :
-              </p>
-              
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-700">
+                Connecté en tant que {user?.email}
+              </span>
               <button
-                onClick={handleSeedData}
-                disabled={isSeeding}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                {isSeeding ? 'Ajout en cours...' : 'Ajouter des données de test'}
+                Déconnexion
               </button>
-
-              {seedResult && (
-                <div className="mt-4 p-3 bg-gray-100 rounded-lg">
-                  <p className="text-sm">{seedResult}</p>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Liens utiles
-              </h3>
-              <ul className="space-y-2">
-                <li>
-                  <a 
-                    href="http://localhost:4000" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    📊 Firebase Emulator UI
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href="/testimonials" 
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    💬 Page des témoignages
-                  </a>
-                </li>
-                <li>
-                  <a 
-                    href="/custom-travel" 
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    ✈️ Formulaire de voyage
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h3 className="text-xl font-semibold text-red-900 mb-4">
-                🔒 Sécurité
-              </h3>
-              <p className="text-red-700">
-                Cette page doit être supprimée ou protégée avant le déploiement en production.
-                Elle expose des fonctionnalités d'administration qui ne doivent pas être accessibles publiquement.
-              </p>
             </div>
           </div>
         </div>
-      </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            
+            {/* Gestion des témoignages */}
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Témoignages
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        Gérer les avis clients
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-5 py-3">
+                <div className="text-sm">
+                  <Link href="/admin/testimonials" className="font-medium text-red-600 hover:text-red-500">
+                    Voir tous les témoignages
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Retour au site */}
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Retour au site
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        Voir le site public
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-5 py-3">
+                <div className="text-sm">
+                  <Link href="/" className="font-medium text-red-600 hover:text-red-500">
+                    Aller au site
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

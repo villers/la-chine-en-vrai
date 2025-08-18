@@ -25,11 +25,28 @@ const apiClient = axios.create({
 
 // Intercepteur pour les requêtes
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
     // Log des requêtes en développement
     if (process.env.NODE_ENV === 'development') {
       console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`);
     }
+    
+    // Ajouter automatiquement le token Firebase pour les routes admin
+    if (config.url?.includes('/api/admin/')) {
+      try {
+        // Import dynamique pour éviter les erreurs SSR
+        const { auth } = await import('@/lib/firebase/config');
+        const user = auth.currentUser;
+        
+        if (user) {
+          const idToken = await user.getIdToken();
+          config.headers.Authorization = `Bearer ${idToken}`;
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération du token:', error);
+      }
+    }
+    
     return config;
   },
   (error) => {

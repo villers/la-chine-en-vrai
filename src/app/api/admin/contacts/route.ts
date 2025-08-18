@@ -1,7 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getRecentContacts } from '@/lib/firebase/contacts';
+import { verifyFirebaseToken } from '@/lib/middleware/auth';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  // Vérification de l'authentification
+  const { valid } = await verifyFirebaseToken(request);
+  if (!valid) {
+    return NextResponse.json(
+      { error: 'Non autorisé - Authentification requise' },
+      { status: 401 }
+    );
+  }
   try {
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit');
