@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "demo-api-key",
@@ -20,15 +21,19 @@ export const db = getFirestore(app);
 // Initialize Auth
 export const auth = getAuth(app);
 
+// Initialize Storage
+export const storage = getStorage(app);
+
 if (process.env.NODE_ENV === 'development') {
   try {
     // Utilise l'IP de la machine hôte ou localhost selon l'environnement
     const emulatorHost = typeof window !== 'undefined' 
       ? window.location.hostname 
-      : process.env.NEXT_PUBLIC_EMULATOR_HOST || '192.168.1.24';
+      : process.env.NEXT_PUBLIC_EMULATOR_HOST || '127.0.0.1';
     
     connectFirestoreEmulator(db, emulatorHost, 8080);
     connectAuthEmulator(auth, `http://${emulatorHost}:9099`);
+    connectStorageEmulator(storage, emulatorHost, 9199);
     console.log(`🔥 Connected to Firebase emulators at ${emulatorHost}`);
   } catch (error) {
     console.log('⚠️ Firebase emulator connection failed:', error);

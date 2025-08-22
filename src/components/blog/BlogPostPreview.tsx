@@ -1,62 +1,115 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { blogApi } from '@/lib/api/blog';
+import { BlogPost } from '@/lib/features/blog/blogSlice';
 import Image from 'next/image';
+import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github.css';
-import BlogPostPreview from '@/components/blog/BlogPostPreview';
 
-interface BlogPostPageProps {
-  params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ preview?: string }>;
+interface BlogPostPreviewProps {
+  slug: string;
 }
 
-async function getBlogPost(slug: string, preview = false) {
-  try {
-    const { blogApi } = await import('@/lib/api');
-    return await blogApi.getPostBySlug(slug, preview);
-  } catch (error) {
-    console.error('Error fetching blog post:', error);
-    return null;
-  }
-}
+export default function BlogPostPreview({ slug }: BlogPostPreviewProps) {
+  const { isAdmin, loading: authLoading } = useAuth();
+  const [post, setPost] = useState<BlogPost | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-async function getAllBlogPosts() {
-  try {
-    const { blogApi } = await import('@/lib/api');
-    return await blogApi.getPosts({ limit: 20 });
-  } catch (error) {
-    console.error('Error fetching blog posts:', error);
-    return [];
-  }
-}
+  useEffect(() => {
+    const loadPost = async () => {
+      try {
+        if (!authLoading && isAdmin) {
+          const postData = await blogApi.getPostBySlug(slug, true);
+          setPost(postData);
+        } else if (!authLoading && !isAdmin) {
+          setError('Accès non autorisé - Vous devez être connecté en tant qu\'administrateur');
+        }
+      } catch (err) {
+        console.error('Error loading preview:', err);
+        setError(`Erreur lors du chargement de la prévisualisation: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-export default async function BlogPostPage({ params, searchParams }: BlogPostPageProps) {
-  const { slug } = await params;
-  const resolvedSearchParams = await (searchParams || Promise.resolve({}));
-  const isPreview = resolvedSearchParams?.preview === 'true';
-  
-  // Si c'est un mode preview, utiliser le composant client
-  if (isPreview) {
-    return <BlogPostPreview slug={slug} />;
+    if (!authLoading) {
+      loadPost();
+    }
+  }, [slug, isAdmin, authLoading]);
+
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600"></div>
+      </div>
+    );
   }
-  
-  const [post, allPosts] = await Promise.all([
-    getBlogPost(slug, false), // Mode public uniquement
-    getAllBlogPosts()
-  ]);
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Accès refusé</h1>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Link
+            href="/admin/login"
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium"
+          >
+            Se connecter
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!post) {
-    notFound();
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Article non trouvé</h1>
+          <Link
+            href="/admin/blog"
+            className="text-red-600 hover:text-red-700 font-medium"
+          >
+            Retour à la gestion des articles
+          </Link>
+        </div>
+      </div>
+    );
   }
-
-  const relatedPosts = allPosts
-    .filter((p: any) => p.id !== post.id && p.category === post.category)
-    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Bandeau de prévisualisation */}
+      {!post.isPublished && (
+        <div className="bg-yellow-100 border-b border-yellow-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="text-yellow-800 font-medium">
+                  🔍 Mode prévisualisation
+                </span>
+                <span className="text-yellow-600">
+                  Cet article n'est pas encore publié et n'est visible que par les administrateurs.
+                </span>
+              </div>
+              <Link
+                href="/admin/blog"
+                className="text-yellow-800 hover:text-yellow-900 font-medium"
+              >
+                Retour à l'admin
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <article className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {post.image && (
@@ -87,6 +140,11 @@ export default async function BlogPostPage({ params, searchParams }: BlogPostPag
                   {post.category}
                 </span>
                 <span className="text-sm text-gray-500">{post.readingTime}</span>
+                {!post.isPublished && (
+                  <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
+                    Brouillon
+                  </span>
+                )}
               </div>
 
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -162,55 +220,6 @@ export default async function BlogPostPage({ params, searchParams }: BlogPostPag
           </div>
         </div>
       </article>
-
-      {relatedPosts.length > 0 && (
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-              Articles similaires
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {relatedPosts.map((relatedPost: any) => (
-                <article key={relatedPost.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                  {relatedPost.image && (
-                    <div className="relative h-48 w-full overflow-hidden">
-                      <Image
-                        src={relatedPost.image}
-                        alt={relatedPost.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="p-6">
-                    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {relatedPost.category}
-                    </span>
-                    
-                    <h3 className="text-lg font-semibold text-gray-900 mt-3 mb-2">
-                      <Link href={`/blog/${relatedPost.slug || relatedPost.id}`} className="hover:text-red-600 transition-colors">
-                        {relatedPost.title}
-                      </Link>
-                    </h3>
-                    
-                    <p className="text-gray-600 text-sm mb-4">{relatedPost.excerpt}</p>
-                    
-                    <Link 
-                      href={`/blog/${relatedPost.slug || relatedPost.id}`}
-                      className="text-red-600 font-medium hover:text-red-700 transition-colors text-sm"
-                    >
-                      Lire la suite →
-                    </Link>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
     </div>
   );
 }

@@ -86,3 +86,38 @@ export const adminTravelRequestsApi = {
     return response.data;
   },
 };
+
+// API pour la gestion des articles de blog admin
+export const adminBlogApi = {
+  // Récupérer tous les articles (publiés et non publiés)
+  getAllPosts: async (includeUnpublished = true) => {
+    const response = await apiClient.get('/api/admin/blog', {
+      params: { includeUnpublished }
+    });
+    return response.data;
+  },
+
+  // Récupérer un article par ID
+  getPostById: async (id: string) => {
+    const response = await apiClient.get(`/api/admin/blog/${id}`);
+    return response.data.post;
+  },
+
+  // Créer un nouvel article
+  createPost: async (postData: any) => {
+    const response = await apiClient.post('/api/admin/blog', postData);
+    return response.data;
+  },
+
+  // Mettre à jour un article
+  updatePost: async (id: string, updates: any) => {
+    const response = await apiClient.patch(`/api/admin/blog/${id}`, updates);
+    return response.data;
+  },
+
+  // Supprimer un article
+  deletePost: async (id: string) => {
+    const response = await apiClient.delete(`/api/admin/blog/${id}`);
+    return response.data;
+  },
+};

@@ -20,8 +20,9 @@ export const blogApi = {
   },
 
   // Récupérer un article par slug
-  getPostBySlug: async (slug: string): Promise<BlogPost> => {
-    const response = await apiClient.get<BlogPostResponse>(`/api/blog/${slug}`);
+  getPostBySlug: async (slug: string, preview = false): Promise<BlogPost> => {
+    const params = preview ? { preview: 'true' } : {};
+    const response = await apiClient.get<BlogPostResponse>(`/api/blog/${slug}`, { params });
     return response.data.blogPost;
   },
 

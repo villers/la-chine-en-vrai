@@ -10,6 +10,7 @@ import adminTestimonialsReducer from '../features/admin/testimonialsSlice';
 import adminContactsReducer from '../features/admin/contactsSlice';
 import adminNewsletterReducer from '../features/admin/newsletterSlice';
 import adminTravelRequestsReducer from '../features/admin/travelRequestsSlice';
+import adminBlogReducer from '../features/admin/blogSlice';
 
 // Combine admin reducers
 const adminReducer = combineReducers({
@@ -17,6 +18,7 @@ const adminReducer = combineReducers({
   contacts: adminContactsReducer,
   newsletter: adminNewsletterReducer,
   travelRequests: adminTravelRequestsReducer,
+  blog: adminBlogReducer,
 });
 
 export const store = configureStore({

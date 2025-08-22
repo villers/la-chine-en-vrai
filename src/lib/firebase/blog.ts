@@ -45,7 +45,7 @@ export interface CreateBlogPostData {
   slug: string;
 }
 
-const COLLECTION_NAME = 'blogPosts';
+const COLLECTION_NAME = 'blog';
 
 /**
  * Crée un nouvel article de blog
@@ -147,14 +147,25 @@ export async function getBlogPostsByCategory(category: string, limitCount: numbe
 /**
  * Récupère un article par son slug
  */
-export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+export async function getBlogPostBySlug(slug: string, allowUnpublished = false): Promise<BlogPost | null> {
   try {
     const blogPostsRef = collection(db, COLLECTION_NAME);
-    const q = query(
-      blogPostsRef,
-      where('slug', '==', slug),
-      where('isPublished', '==', true)
-    );
+    let q;
+    
+    if (allowUnpublished) {
+      // Mode admin : récupère l'article même s'il n'est pas publié
+      q = query(
+        blogPostsRef,
+        where('slug', '==', slug)
+      );
+    } else {
+      // Mode public : seulement les articles publiés
+      q = query(
+        blogPostsRef,
+        where('slug', '==', slug),
+        where('isPublished', '==', true)
+      );
+    }
 
     const querySnapshot = await getDocs(q);
     

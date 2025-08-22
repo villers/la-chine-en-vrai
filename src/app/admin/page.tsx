@@ -3,17 +3,44 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useAppDispatch } from '@/lib/store/hooks';
+import { fetchBlogPostsAdmin, useAdminBlogPosts, usePublishedBlogPosts, useUnpublishedBlogPosts } from '@/lib/features/admin/blogSlice';
+import { fetchTestimonials, useTestimonials } from '@/lib/features/admin/testimonialsSlice';
+import { fetchContacts, useContacts } from '@/lib/features/admin/contactsSlice';
+import { fetchSubscribers, useSubscribers } from '@/lib/features/admin/newsletterSlice';
+import { fetchTravelRequests, useTravelRequests } from '@/lib/features/admin/travelRequestsSlice';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
   const { user, loading, logout, isAdmin } = useAuth();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  // Hooks pour les statistiques
+  const blogPosts = useAdminBlogPosts();
+  const publishedPosts = usePublishedBlogPosts();
+  const unpublishedPosts = useUnpublishedBlogPosts();
+  const testimonials = useTestimonials();
+  const contacts = useContacts();
+  const subscribers = useSubscribers();
+  const travelRequests = useTravelRequests();
 
   useEffect(() => {
     if (!loading && !isAdmin) {
       router.push('/admin/login');
     }
   }, [loading, isAdmin, router]);
+
+  useEffect(() => {
+    if (isAdmin) {
+      // Charger toutes les données pour les statistiques
+      dispatch(fetchBlogPostsAdmin());
+      dispatch(fetchTestimonials());
+      dispatch(fetchContacts());
+      dispatch(fetchSubscribers());
+      dispatch(fetchTravelRequests());
+    }
+  }, [isAdmin, dispatch]);
 
   const handleLogout = async () => {
     try {
@@ -79,7 +106,7 @@ export default function AdminDashboard() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Témoignages
+                        Témoignages ({testimonials.length})
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         Gérer les avis clients
@@ -109,7 +136,7 @@ export default function AdminDashboard() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Messages de Contact
+                        Messages de Contact ({contacts.length})
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         Consulter les demandes
@@ -139,7 +166,7 @@ export default function AdminDashboard() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Newsletter
+                        Newsletter ({subscribers.length})
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         Abonnés à la newsletter
@@ -170,7 +197,7 @@ export default function AdminDashboard() {
                   <div className="ml-5 w-0 flex-1">
                     <dl>
                       <dt className="text-sm font-medium text-gray-500 truncate">
-                        Demandes de Voyage
+                        Demandes de Voyage ({travelRequests.length})
                       </dt>
                       <dd className="text-lg font-medium text-gray-900">
                         Voyages sur mesure
@@ -183,6 +210,36 @@ export default function AdminDashboard() {
                 <div className="text-sm">
                   <Link href="/admin/travel-requests" className="font-medium text-red-600 hover:text-red-500">
                     Voir les demandes
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Gestion du Blog */}
+            <div className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">
+                        Articles de Blog ({blogPosts.length})
+                      </dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {publishedPosts.length} publiés, {unpublishedPosts.length} brouillons
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-5 py-3">
+                <div className="text-sm">
+                  <Link href="/admin/blog" className="font-medium text-red-600 hover:text-red-500">
+                    Gérer les articles
                   </Link>
                 </div>
               </div>

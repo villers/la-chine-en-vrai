@@ -21,6 +21,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Inclure les cookies automatiquement
 });
 
 // Intercepteur pour les requêtes
@@ -31,8 +32,12 @@ apiClient.interceptors.request.use(
       console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`);
     }
     
-    // Ajouter automatiquement le token Firebase pour les routes admin
-    if (config.url?.includes('/api/admin/')) {
+    // Ajouter automatiquement le token Firebase pour les routes admin ou les routes avec preview
+    const isAdminRoute = config.url?.includes('/api/admin/');
+    const isPreviewRoute = config.url?.includes('preview=true') || 
+                          (config.params && config.params.preview === 'true');
+    
+    if (isAdminRoute || isPreviewRoute) {
       try {
         // Import dynamique pour éviter les erreurs SSR
         const { auth } = await import('@/lib/firebase/config');

@@ -1,43 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/firebase/config';
 
 export async function verifyFirebaseToken(request: NextRequest): Promise<{ valid: boolean; uid?: string; email?: string }> {
   try {
     // Récupérer le token depuis le header Authorization ou cookies
     const authHeader = request.headers.get('authorization');
+    const adminTokenCookie = request.cookies.get('admin-token')?.value;
+    
     const token = authHeader?.startsWith('Bearer ') 
       ? authHeader.substring(7) 
-      : request.cookies.get('admin-token')?.value;
+      : adminTokenCookie;
 
     if (!token) {
-      console.log('❌ Pas de token trouvé');
       return { valid: false };
     }
 
-    // En développement avec l'émulateur, on accepte tous les tokens Firebase valides
+    // En développement avec l'émulateur, vérification simplifiée
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 Vérification du token en développement:', token.substring(0, 20) + '...');
-      
       // Vérification basique du format du token Firebase
-      // Les tokens Firebase ont un format JWT avec 3 parties séparées par des points
       const parts = token.split('.');
       if (parts.length === 3 && token.length > 50) {
-        console.log('✅ Token valide en développement');
         return { 
           valid: true, 
           uid: 'admin-dev', 
           email: 'admin@chine-en-vrai.com' 
         };
       }
-      
-      console.log('❌ Format de token invalide');
+      return { valid: false };
     }
 
-    // En production, ici on utiliserait Firebase Admin SDK pour vérifier le token
-    // const decodedToken = await admin.auth().verifyIdToken(token);
-    // return { valid: true, uid: decodedToken.uid, email: decodedToken.email };
-
-    return { valid: false };
+    // En production, utiliser Firebase Admin SDK pour vérifier le token
+    try {
+      const { verifyIdToken, verifyAdminUser } = await import('@/lib/firebase/admin');
+      const tokenResult = await verifyIdToken(token);
+      
+      if (!tokenResult.valid || !tokenResult.uid) {
+        return { valid: false };
+      }
+      
+      // Vérifier que l'utilisateur a les droits admin
+      const isAdmin = await verifyAdminUser(tokenResult.uid);
+      if (!isAdmin) {
+        return { valid: false };
+      }
+      
+      return {
+        valid: true,
+        uid: tokenResult.uid,
+        email: tokenResult.email
+      };
+    } catch (adminError) {
+      console.error('Erreur Firebase Admin:', adminError);
+      return { valid: false };
+    }
   } catch (error) {
     console.error('Erreur de vérification du token:', error);
     return { valid: false };
