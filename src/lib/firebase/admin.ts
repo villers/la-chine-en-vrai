@@ -13,6 +13,11 @@ const initAdmin = () => {
             !process.env.FIREBASE_ADMIN_PROJECT_ID) {
           throw new Error('Variables d\'environnement Firebase Admin manquantes');
         }
+        
+        // Si c'est une clé de build dummy, ne pas initialiser
+        if (process.env.FIREBASE_ADMIN_PRIVATE_KEY.includes('BUILD_DUMMY_KEY')) {
+          return null;
+        }
 
         const serviceAccount = {
           projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
@@ -52,6 +57,10 @@ let adminApp: any = null;
 export const getAdminAuth = () => {
   if (!adminAuth) {
     adminAuth = initAdmin();
+    // Si l'initialisation retourne null (pendant le build), créer un mock
+    if (!adminAuth) {
+      return null;
+    }
   }
   return adminAuth;
 };
@@ -96,6 +105,9 @@ export const initializeFirebaseAdmin = () => {
 export async function verifyIdToken(idToken: string) {
   try {
     const auth = getAdminAuth();
+    if (!auth) {
+      throw new Error('Firebase Admin non initialisé');
+    }
     const decodedToken = await auth.verifyIdToken(idToken);
     return {
       valid: true,
@@ -120,6 +132,9 @@ export async function verifyIdToken(idToken: string) {
 export async function verifyAdminUser(uid: string) {
   try {
     const auth = getAdminAuth();
+    if (!auth) {
+      throw new Error('Firebase Admin non initialisé');
+    }
     const user = await auth.getUser(uid);
     
     // Vérifier les custom claims ou autres critères d'admin
@@ -137,6 +152,9 @@ export async function verifyAdminUser(uid: string) {
 export async function setAdminClaims(uid: string, isAdmin: boolean = true) {
   try {
     const auth = getAdminAuth();
+    if (!auth) {
+      throw new Error('Firebase Admin non initialisé');
+    }
     await auth.setCustomUserClaims(uid, { admin: isAdmin });
     return true;
   } catch (error) {
