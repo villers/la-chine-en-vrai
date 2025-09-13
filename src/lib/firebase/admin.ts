@@ -47,12 +47,47 @@ const initAdmin = () => {
 
 // Instance globale de Firebase Admin Auth
 let adminAuth: ReturnType<typeof getAuth> | null = null;
+let adminApp: any = null;
 
 export const getAdminAuth = () => {
   if (!adminAuth) {
     adminAuth = initAdmin();
   }
   return adminAuth;
+};
+
+export const initializeFirebaseAdmin = () => {
+  if (!adminApp) {
+    // Réutiliser la logique de initAdmin mais retourner l'app
+    if (getApps().length === 0) {
+      if (process.env.NODE_ENV === 'production') {
+        if (!process.env.FIREBASE_ADMIN_PRIVATE_KEY || 
+            !process.env.FIREBASE_ADMIN_CLIENT_EMAIL || 
+            !process.env.FIREBASE_ADMIN_PROJECT_ID) {
+          throw new Error('Variables d\'environnement Firebase Admin manquantes');
+        }
+
+        const serviceAccount = {
+          projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        };
+
+        adminApp = initializeApp({
+          credential: cert(serviceAccount),
+          projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+        });
+      } else {
+        // En développement, utiliser l'émulateur
+        adminApp = initializeApp({
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
+        });
+      }
+    } else {
+      adminApp = getApps()[0];
+    }
+  }
+  return adminApp;
 };
 
 /**

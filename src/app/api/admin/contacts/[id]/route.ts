@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyFirebaseToken } from '@/lib/middleware/auth';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/config';
+import { ContactsAdminService } from '@/lib/firebase/contacts-admin';
 
-export async function PATCH(
+export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Vérification de l'authentification
   const { valid } = await verifyFirebaseToken(request);
@@ -17,14 +16,57 @@ export async function PATCH(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
+    const contact = await ContactsAdminService.getContactById(id);
+    
+    if (!contact) {
+      return NextResponse.json(
+        { error: 'Contact non trouvé' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      contact
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la récupération du contact:', error);
+    return NextResponse.json(
+      { error: 'Une erreur est survenue lors de la récupération' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  // Vérification de l'authentification
+  const { valid } = await verifyFirebaseToken(request);
+  if (!valid) {
+    return NextResponse.json(
+      { error: 'Non autorisé - Authentification requise' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { id } = await params;
     const updates = await request.json();
 
-    const contactRef = doc(db, 'contacts', id);
-    await updateDoc(contactRef, {
-      ...updates,
-      updatedAt: new Date()
-    });
+    // Si on met à jour seulement le statut
+    if (updates.status && Object.keys(updates).length === 1) {
+      await ContactsAdminService.updateContactStatus(id, updates.status);
+    } else {
+      // Mise à jour générale (non implémentée dans le service, peut être ajoutée si nécessaire)
+      return NextResponse.json(
+        { error: 'Mise à jour générale non supportée, utilisez updateContactStatus' },
+        { status: 400 }
+      );
+    }
     
     return NextResponse.json({
       success: true,
@@ -42,7 +84,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Vérification de l'authentification
   const { valid } = await verifyFirebaseToken(request);
@@ -54,10 +96,8 @@ export async function DELETE(
   }
 
   try {
-    const { id } = params;
-
-    const contactRef = doc(db, 'contacts', id);
-    await deleteDoc(contactRef);
+    const { id } = await params;
+    await ContactsAdminService.deleteContact(id);
     
     return NextResponse.json({
       success: true,

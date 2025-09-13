@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyFirebaseToken } from '@/lib/middleware/auth';
-import { updateTestimonial, deleteTestimonial } from '@/lib/firebase/testimonials';
+import { TestimonialsAdminService } from '@/lib/firebase/testimonials-admin';
 
-export async function PATCH(
+export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Vérification de l'authentification
   const { valid } = await verifyFirebaseToken(request);
@@ -16,10 +16,48 @@ export async function PATCH(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
+    const testimonial = await TestimonialsAdminService.getTestimonialById(id);
+    
+    if (!testimonial) {
+      return NextResponse.json(
+        { error: 'Témoignage non trouvé' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({
+      success: true,
+      testimonial
+    });
+
+  } catch (error) {
+    console.error('Erreur lors de la récupération du témoignage:', error);
+    return NextResponse.json(
+      { error: 'Une erreur est survenue lors de la récupération' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  // Vérification de l'authentification
+  const { valid } = await verifyFirebaseToken(request);
+  if (!valid) {
+    return NextResponse.json(
+      { error: 'Non autorisé - Authentification requise' },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { id } = await params;
     const updates = await request.json();
 
-    await updateTestimonial(id, updates);
+    await TestimonialsAdminService.updateTestimonial(id, updates);
     
     return NextResponse.json({
       success: true,
@@ -37,7 +75,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Vérification de l'authentification
   const { valid } = await verifyFirebaseToken(request);
@@ -49,9 +87,9 @@ export async function DELETE(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
 
-    await deleteTestimonial(id);
+    await TestimonialsAdminService.deleteTestimonial(id);
     
     return NextResponse.json({
       success: true,

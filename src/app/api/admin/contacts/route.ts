@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getRecentContacts } from '@/lib/firebase/contacts';
+import { ContactsAdminService } from '@/lib/firebase/contacts-admin';
 import { verifyFirebaseToken } from '@/lib/middleware/auth';
 
 export async function GET(request: NextRequest) {
@@ -14,9 +14,21 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get('limit');
+    const offsetParam = searchParams.get('offset');
+    const statsParam = searchParams.get('stats');
+    
     const limit = limitParam ? parseInt(limitParam) : 50;
+    const offset = offsetParam ? parseInt(offsetParam) : 0;
 
-    const contacts = await getRecentContacts(limit);
+    if (statsParam === 'true') {
+      const stats = await ContactsAdminService.getContactsStats();
+      return NextResponse.json({
+        success: true,
+        stats
+      });
+    }
+
+    const contacts = await ContactsAdminService.getAllContacts(limit, offset);
     
     return NextResponse.json({
       success: true,
