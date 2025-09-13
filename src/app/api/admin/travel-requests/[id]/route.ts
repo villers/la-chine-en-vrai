@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase/config';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Vérification de l'authentification
   const { valid } = await verifyFirebaseToken(request);
@@ -17,7 +17,7 @@ export async function PATCH(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const updates = await request.json();
 
     const travelRequestRef = doc(db, 'travelRequests', id);
@@ -42,7 +42,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Vérification de l'authentification
   const { valid } = await verifyFirebaseToken(request);
@@ -54,7 +54,7 @@ export async function DELETE(
   }
 
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const travelRequestRef = doc(db, 'travelRequests', id);
     await deleteDoc(travelRequestRef);

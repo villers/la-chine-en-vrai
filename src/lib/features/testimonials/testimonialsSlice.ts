@@ -71,7 +71,7 @@ const testimonialsSlice = createSlice({
       })
       .addCase(fetchTestimonials.fulfilled, (state, action) => {
         state.loading = false;
-        state.testimonials = action.payload;
+        state.testimonials = action.payload as any;
       })
       .addCase(fetchTestimonials.rejected, (state, action) => {
         state.loading = false;
@@ -86,7 +86,7 @@ const testimonialsSlice = createSlice({
       })
       .addCase(fetchTestimonialsByTravelType.fulfilled, (state, action) => {
         state.loading = false;
-        state.testimonials = action.payload;
+        state.testimonials = action.payload as any;
       })
       .addCase(fetchTestimonialsByTravelType.rejected, (state, action) => {
         state.loading = false;

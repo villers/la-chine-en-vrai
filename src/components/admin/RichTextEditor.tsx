@@ -38,7 +38,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "Comme
         onChange={handleChange}
         preview="edit"
         hideToolbar={false}
-        visibleDragBar={false}
+        visibleDragbar={false}
         textareaProps={{
           placeholder,
           style: {

@@ -32,7 +32,7 @@ export default function BlogPostPreview({ slug }: BlogPostPreviewProps) {
         }
       } catch (err) {
         console.error('Error loading preview:', err);
-        setError(`Erreur lors du chargement de la prévisualisation: ${err.message}`);
+        setError(`Erreur lors du chargement de la prévisualisation: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
       } finally {
         setLoading(false);
       }

@@ -34,7 +34,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAdmin) {
       // Charger toutes les données pour les statistiques
-      dispatch(fetchBlogPostsAdmin());
+      dispatch(fetchBlogPostsAdmin({}));
       dispatch(fetchTestimonials());
       dispatch(fetchContacts());
       dispatch(fetchSubscribers());

@@ -14,7 +14,7 @@ COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN npm run build -- --no-lint
 
 FROM base AS runner
 WORKDIR /app

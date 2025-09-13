@@ -12,8 +12,8 @@ export function convertFirebaseDoc(doc: any): any {
   // Convert all fields
   for (const [key, value] of Object.entries(data)) {
     // Convert Firebase Timestamps to JavaScript Dates
-    if (value && typeof value === 'object' && value.toDate) {
-      convertedData[key] = value.toDate();
+    if (value && typeof value === 'object' && 'toDate' in value) {
+      convertedData[key] = (value as any).toDate();
     } else {
       convertedData[key] = value;
     }

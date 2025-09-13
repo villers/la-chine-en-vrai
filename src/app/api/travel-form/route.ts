@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       accommodationType: formData.accommodationType || 'standard',
       transportPreference: formData.transportPreference || 'Flexible',
       specialRequests: formData.specialRequests || '',
-      status: 'new'
+      status: 'new' as const
     };
 
     // Sauvegarder la demande de voyage dans Firebase

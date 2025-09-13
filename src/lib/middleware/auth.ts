@@ -46,7 +46,7 @@ export async function verifyFirebaseToken(request: NextRequest): Promise<{ valid
       return {
         valid: true,
         uid: tokenResult.uid,
-        email: tokenResult.email
+        email: tokenResult.email || undefined
       };
     } catch (adminError) {
       console.error('Erreur Firebase Admin:', adminError);

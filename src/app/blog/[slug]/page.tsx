@@ -35,7 +35,7 @@ async function getAllBlogPosts() {
 export default async function BlogPostPage({ params, searchParams }: BlogPostPageProps) {
   const { slug } = await params;
   const resolvedSearchParams = await (searchParams || Promise.resolve({}));
-  const isPreview = resolvedSearchParams?.preview === 'true';
+  const isPreview = (resolvedSearchParams as { preview?: string })?.preview === 'true';
   
   // Si c'est un mode preview, utiliser le composant client
   if (isPreview) {
