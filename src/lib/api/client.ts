@@ -2,15 +2,20 @@ import axios from 'axios';
 
 // Configuration de l'instance axios globale
 const getBaseURL = () => {
+  // En production, utilise l'URL configurée ou une URL relative si on est sur le même domaine
   if (process.env.NODE_ENV === 'production') {
-    return process.env.NEXT_PUBLIC_API_URL || 'https://your-domain.com';
+    // Si on est côté client et qu'aucune API_URL n'est définie, utilise une URL relative
+    if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_API_URL) {
+      return `${window.location.protocol}//${window.location.host}`;
+    }
+    return process.env.NEXT_PUBLIC_API_URL || 'https://la-chine-en-vrai-713924757566.europe-west9.run.app';
   }
-  
+
   // En développement, utilise l'URL courante si on est côté client
   if (typeof window !== 'undefined') {
     return `${window.location.protocol}//${window.location.host}`;
   }
-  
+
   // Côté serveur, utilise localhost avec le port par défaut
   return 'http://localhost:3000';
 };
