@@ -12,7 +12,7 @@ import {
   where 
 } from 'firebase/firestore';
 import { db } from './config';
-import { convertFirebaseDoc } from './utils';
+import { convertFirebaseDoc, ensureFirebaseInitialized } from './utils';
 
 // Types pour l'admin blog
 export interface AdminBlogPost {
@@ -45,6 +45,8 @@ export class BlogAdminService {
    * Récupère tous les articles (publiés et non publiés)
    */
   static async getAllPosts(includeUnpublished = true): Promise<AdminBlogPost[]> {
+    ensureFirebaseInitialized();
+
     try {
       const postsRef = collection(db, COLLECTION_NAME);
       let q = query(postsRef, orderBy('createdAt', 'desc'));
