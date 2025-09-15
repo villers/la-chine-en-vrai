@@ -34,6 +34,11 @@ export function useAuthState() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -43,6 +48,10 @@ export function useAuthState() {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    if (!auth) {
+      throw new Error('Firebase not initialized');
+    }
+
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
@@ -52,6 +61,10 @@ export function useAuthState() {
   };
 
   const logout = async () => {
+    if (!auth) {
+      throw new Error('Firebase not initialized');
+    }
+
     await signOut(auth);
   };
 
