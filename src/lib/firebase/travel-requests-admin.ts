@@ -34,6 +34,26 @@ export class TravelRequestsAdminService {
   }
 
   /**
+   * Crée une nouvelle demande de voyage
+   */
+  static async createTravelRequest(travelData: Omit<AdminTravelRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    try {
+      const docRef = this.getDb().collection(COLLECTION_NAME).doc();
+      await docRef.set({
+        ...travelData,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+
+      console.log('Demande de voyage créée avec l\'ID:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('Erreur lors de la création de la demande de voyage (admin):', error);
+      throw error;
+    }
+  }
+
+  /**
    * Récupère toutes les demandes de voyage avec pagination
    */
   static async getAllTravelRequests(

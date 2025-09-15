@@ -25,6 +25,26 @@ export class ContactsAdminService {
   }
 
   /**
+   * Crée un nouveau message de contact
+   */
+  static async createContact(contactData: Omit<AdminContactMessage, 'id' | 'createdAt' | 'status'>): Promise<string> {
+    try {
+      const docRef = this.getDb().collection(COLLECTION_NAME).doc();
+      await docRef.set({
+        ...contactData,
+        createdAt: new Date(),
+        status: 'new'
+      });
+
+      console.log('Message de contact créé avec l\'ID:', docRef.id);
+      return docRef.id;
+    } catch (error) {
+      console.error('Erreur lors de la création du message de contact (admin):', error);
+      throw error;
+    }
+  }
+
+  /**
    * Récupère tous les messages de contact avec pagination
    */
   static async getAllContacts(limit = 50, offset = 0): Promise<AdminContactMessage[]> {

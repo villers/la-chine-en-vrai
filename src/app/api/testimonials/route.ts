@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createTestimonial } from '@/lib/firebase/testimonials';
+import { TestimonialsAdminService } from '@/lib/firebase/testimonials-admin';
 
 export async function POST(request: Request) {
   try {
@@ -29,8 +29,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Créer le témoignage dans Firebase
-    const testimonialId = await createTestimonial(testimonialData);
+    // Créer le témoignage dans Firebase avec Admin
+    const testimonialId = await TestimonialsAdminService.createTestimonial(testimonialData);
 
     // Log pour le suivi
     console.log('Nouveau témoignage créé:', {

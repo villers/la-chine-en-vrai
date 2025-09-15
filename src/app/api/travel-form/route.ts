@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createTravelRequest } from '@/lib/firebase/travelRequests';
+import { TravelRequestsAdminService } from '@/lib/firebase/travel-requests-admin';
 
 export async function POST(request: Request) {
   try {
@@ -48,8 +48,8 @@ export async function POST(request: Request) {
       status: 'new' as const
     };
 
-    // Sauvegarder la demande de voyage dans Firebase
-    const travelRequestId = await createTravelRequest(travelRequestData);
+    // Sauvegarder la demande de voyage dans Firebase avec Admin
+    const travelRequestId = await TravelRequestsAdminService.createTravelRequest(travelRequestData);
 
     // Log de la demande de voyage
     console.log('Nouvelle demande de voyage sauvegardée:', {

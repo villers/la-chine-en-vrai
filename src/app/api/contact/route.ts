@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createContact } from '@/lib/firebase/contacts';
+import { ContactsAdminService } from '@/lib/firebase/contacts-admin';
 
 export async function POST(request: Request) {
   try {
@@ -30,8 +30,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Sauvegarder le message de contact dans Firebase
-    const contactId = await createContact({
+    // Sauvegarder le message de contact dans Firebase avec Admin
+    const contactId = await ContactsAdminService.createContact({
       firstName,
       lastName,
       email,
