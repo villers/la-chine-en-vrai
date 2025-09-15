@@ -1,34 +1,12 @@
-/**
- * Utilities for Firebase data conversion
- */
+import { db, auth, storage } from './config';
 
-/**
- * Converts Firebase document data to JavaScript objects with proper date conversion
- */
-export function convertFirebaseDoc(doc: any): any {
-  const data = doc.data();
-  const convertedData: any = { id: doc.id };
-  
-  // Convert all fields
-  for (const [key, value] of Object.entries(data)) {
-    // Convert Firebase Timestamps to JavaScript Dates
-    if (value && typeof value === 'object' && 'toDate' in value) {
-      convertedData[key] = (value as any).toDate();
-    } else {
-      convertedData[key] = value;
-    }
+export function ensureFirebaseInitialized() {
+  if (!db) {
+    throw new Error('Firebase not initialized - use API endpoints instead');
   }
-  
-  return convertedData;
 }
 
-/**
- * Converts an array of Firebase documents to JavaScript objects
- */
-export function convertFirebaseDocs(querySnapshot: any): any[] {
-  const results: any[] = [];
-  querySnapshot.forEach((doc: any) => {
-    results.push(convertFirebaseDoc(doc));
-  });
-  return results;
+export function getFirebaseServices() {
+  ensureFirebaseInitialized();
+  return { db, auth, storage };
 }

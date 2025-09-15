@@ -12,34 +12,49 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || (process.env.NODE_ENV === 'development' ? "1:123456789:web:demo" : undefined)
 };
 
-// Firebase configuration will be validated at runtime when used
+// Check if we have valid Firebase config before initializing
+const hasValidConfig = firebaseConfig.apiKey &&
+                      firebaseConfig.authDomain &&
+                      firebaseConfig.projectId &&
+                      firebaseConfig.storageBucket &&
+                      firebaseConfig.messagingSenderId &&
+                      firebaseConfig.appId;
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app: any = null;
+let db: any = null;
+let auth: any = null;
+let storage: any = null;
 
-// Initialize Firestore
-export const db = getFirestore(app);
+if (hasValidConfig) {
+  // Initialize Firebase only if we have valid config
+  app = initializeApp(firebaseConfig);
 
-// Initialize Auth
-export const auth = getAuth(app);
+  // Initialize Firestore
+  db = getFirestore(app);
 
-// Initialize Storage
-export const storage = getStorage(app);
+  // Initialize Auth
+  auth = getAuth(app);
 
-if (process.env.NODE_ENV === 'development') {
-  try {
-    // Utilise l'IP de la machine hôte ou localhost selon l'environnement
-    const emulatorHost = typeof window !== 'undefined' 
-      ? window.location.hostname 
-      : process.env.NEXT_PUBLIC_EMULATOR_HOST || '127.0.0.1';
-    
-    connectFirestoreEmulator(db, emulatorHost, 8080);
-    connectAuthEmulator(auth, `http://${emulatorHost}:9099`);
-    connectStorageEmulator(storage, emulatorHost, 9199);
-    console.log(`🔥 Connected to Firebase emulators at ${emulatorHost}`);
-  } catch (error) {
-    console.log('⚠️ Firebase emulator connection failed:', error);
+  // Initialize Storage
+  storage = getStorage(app);
+
+  if (process.env.NODE_ENV === 'development') {
+    try {
+      // Utilise l'IP de la machine hôte ou localhost selon l'environnement
+      const emulatorHost = typeof window !== 'undefined'
+        ? window.location.hostname
+        : process.env.NEXT_PUBLIC_EMULATOR_HOST || '127.0.0.1';
+
+      connectFirestoreEmulator(db, emulatorHost, 8080);
+      connectAuthEmulator(auth, `http://${emulatorHost}:9099`);
+      connectStorageEmulator(storage, emulatorHost, 9199);
+      console.log(`🔥 Connected to Firebase emulators at ${emulatorHost}`);
+    } catch (error) {
+      console.log('⚠️ Firebase emulator connection failed:', error);
+    }
   }
 }
 
+// Export Firebase services (they will be null if config is invalid)
+export { db, auth, storage };
 export default app;

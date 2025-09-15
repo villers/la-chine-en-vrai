@@ -57,13 +57,17 @@ export interface LegacyTravelRequest {
  * Crée une nouvelle demande de voyage
  */
 export async function createTravelRequest(travelData: Omit<TravelRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+  if (!db) {
+    throw new Error('Firebase not initialized - use API endpoints instead');
+  }
+
   try {
     const docRef = await addDoc(collection(db, 'travelRequests'), {
       ...travelData,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     });
-    
+
     console.log('Demande de voyage créée avec l\'ID:', docRef.id);
     return docRef.id;
   } catch (error) {
@@ -76,6 +80,10 @@ export async function createTravelRequest(travelData: Omit<TravelRequest, 'id' |
  * Récupère les demandes de voyage récentes
  */
 export async function getRecentTravelRequests(limitCount: number = 50): Promise<TravelRequest[]> {
+  if (!db) {
+    throw new Error('Firebase not initialized - use API endpoints instead');
+  }
+
   try {
     const requestsRef = collection(db, 'travelRequests');
     const q = query(
@@ -83,10 +91,10 @@ export async function getRecentTravelRequests(limitCount: number = 50): Promise<
       orderBy('createdAt', 'desc'),
       limit(limitCount)
     );
-    
+
     const querySnapshot = await getDocs(q);
     const requests: TravelRequest[] = [];
-    
+
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       requests.push({
@@ -97,7 +105,7 @@ export async function getRecentTravelRequests(limitCount: number = 50): Promise<
         updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt
       } as TravelRequest);
     });
-    
+
     return requests;
   } catch (error) {
     console.error('Erreur lors de la récupération des demandes de voyage:', error);
@@ -109,6 +117,10 @@ export async function getRecentTravelRequests(limitCount: number = 50): Promise<
  * Récupère les demandes de voyage par statut
  */
 export async function getTravelRequestsByStatus(status: string): Promise<TravelRequest[]> {
+  if (!db) {
+    throw new Error('Firebase not initialized - use API endpoints instead');
+  }
+
   try {
     const requestsRef = collection(db, 'travelRequests');
     const q = query(
@@ -116,10 +128,10 @@ export async function getTravelRequestsByStatus(status: string): Promise<TravelR
       where('status', '==', status),
       orderBy('createdAt', 'desc')
     );
-    
+
     const querySnapshot = await getDocs(q);
     const requests: TravelRequest[] = [];
-    
+
     querySnapshot.forEach((doc) => {
       const data = doc.data();
       requests.push({
@@ -130,7 +142,7 @@ export async function getTravelRequestsByStatus(status: string): Promise<TravelR
         updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : data.updatedAt
       } as TravelRequest);
     });
-    
+
     return requests;
   } catch (error) {
     console.error('Erreur lors de la récupération des demandes par statut:', error);
