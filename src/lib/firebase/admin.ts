@@ -3,21 +3,18 @@ import { getAuth } from 'firebase-admin/auth';
 
 // Configuration Firebase Admin
 const initAdmin = () => {
+  // Ne pas initialiser Firebase Admin si les variables ne sont pas disponibles
+  if (!process.env.FIREBASE_ADMIN_PRIVATE_KEY || 
+      !process.env.FIREBASE_ADMIN_CLIENT_EMAIL || 
+      !process.env.FIREBASE_ADMIN_PROJECT_ID) {
+    return null;
+  }
+
   try {
     // Vérifier si une app admin existe déjà
     if (getApps().length === 0) {
       // En production, utiliser les variables d'environnement pour la clé de service
       if (process.env.NODE_ENV === 'production') {
-        if (!process.env.FIREBASE_ADMIN_PRIVATE_KEY || 
-            !process.env.FIREBASE_ADMIN_CLIENT_EMAIL || 
-            !process.env.FIREBASE_ADMIN_PROJECT_ID) {
-          throw new Error('Variables d\'environnement Firebase Admin manquantes');
-        }
-        
-        // Si c'est une clé de build dummy, ne pas initialiser
-        if (process.env.FIREBASE_ADMIN_PRIVATE_KEY.includes('BUILD_DUMMY_KEY')) {
-          return null;
-        }
 
         const serviceAccount = {
           projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
@@ -46,7 +43,7 @@ const initAdmin = () => {
     return getAuth();
   } catch (error) {
     console.error('Erreur lors de l\'initialisation Firebase Admin:', error);
-    throw error;
+    return null;
   }
 };
 
@@ -66,34 +63,40 @@ export const getAdminAuth = () => {
 };
 
 export const initializeFirebaseAdmin = () => {
+  // Ne pas initialiser si les variables ne sont pas disponibles
+  if (!process.env.FIREBASE_ADMIN_PRIVATE_KEY || 
+      !process.env.FIREBASE_ADMIN_CLIENT_EMAIL || 
+      !process.env.FIREBASE_ADMIN_PROJECT_ID) {
+    return null;
+  }
+
   if (!adminApp) {
-    // Réutiliser la logique de initAdmin mais retourner l'app
-    if (getApps().length === 0) {
-      if (process.env.NODE_ENV === 'production') {
-        if (!process.env.FIREBASE_ADMIN_PRIVATE_KEY || 
-            !process.env.FIREBASE_ADMIN_CLIENT_EMAIL || 
-            !process.env.FIREBASE_ADMIN_PROJECT_ID) {
-          throw new Error('Variables d\'environnement Firebase Admin manquantes');
+    try {
+      // Réutiliser la logique de initAdmin mais retourner l'app
+      if (getApps().length === 0) {
+        if (process.env.NODE_ENV === 'production') {
+          const serviceAccount = {
+            projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          };
+
+          adminApp = initializeApp({
+            credential: cert(serviceAccount),
+            projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
+          });
+        } else {
+          // En développement, utiliser l'émulateur
+          adminApp = initializeApp({
+            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
+          });
         }
-
-        const serviceAccount = {
-          projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-          privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, '\n'),
-        };
-
-        adminApp = initializeApp({
-          credential: cert(serviceAccount),
-          projectId: process.env.FIREBASE_ADMIN_PROJECT_ID,
-        });
       } else {
-        // En développement, utiliser l'émulateur
-        adminApp = initializeApp({
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'demo-project',
-        });
+        adminApp = getApps()[0];
       }
-    } else {
-      adminApp = getApps()[0];
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation Firebase Admin:', error);
+      return null;
     }
   }
   return adminApp;

@@ -25,7 +25,13 @@ export interface AdminTravelRequest {
 }
 
 export class TravelRequestsAdminService {
-  private static db = getFirestore(initializeFirebaseAdmin());
+  private static getDb() {
+    const app = initializeFirebaseAdmin();
+    if (!app) {
+      throw new Error('Firebase Admin n\'est pas initialisé');
+    }
+    return getFirestore(app);
+  }
 
   /**
    * Récupère toutes les demandes de voyage avec pagination
@@ -36,7 +42,7 @@ export class TravelRequestsAdminService {
     offset = 0
   ): Promise<AdminTravelRequest[]> {
     try {
-      const requestsRef = this.db.collection(COLLECTION_NAME);
+      const requestsRef = this.getDb().collection(COLLECTION_NAME);
       let query = requestsRef.orderBy('createdAt', 'desc');
 
       if (status) {
@@ -90,7 +96,7 @@ export class TravelRequestsAdminService {
    */
   static async getTravelRequestById(id: string): Promise<AdminTravelRequest | null> {
     try {
-      const doc = await this.db.collection(COLLECTION_NAME).doc(id).get();
+      const doc = await this.getDb().collection(COLLECTION_NAME).doc(id).get();
       
       if (!doc.exists) {
         return null;
@@ -131,7 +137,7 @@ export class TravelRequestsAdminService {
     status: 'new' | 'in_progress' | 'processed' | 'cancelled'
   ): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).update({
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update({
         status,
         updatedAt: new Date()
       });
@@ -146,7 +152,7 @@ export class TravelRequestsAdminService {
    */
   static async assignTravelRequest(id: string, assignedTo: string): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).update({
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update({
         assignedTo,
         status: 'in_progress',
         updatedAt: new Date()
@@ -162,7 +168,7 @@ export class TravelRequestsAdminService {
    */
   static async updateTravelRequestNotes(id: string, notes: string): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).update({
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update({
         notes,
         updatedAt: new Date()
       });
@@ -185,7 +191,7 @@ export class TravelRequestsAdminService {
       delete updateData.id;
       delete updateData.createdAt;
 
-      await this.db.collection(COLLECTION_NAME).doc(id).update(updateData);
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update(updateData);
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la demande de voyage:', error);
       throw error;
@@ -197,7 +203,7 @@ export class TravelRequestsAdminService {
    */
   static async deleteTravelRequest(id: string): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).delete();
+      await this.getDb().collection(COLLECTION_NAME).doc(id).delete();
     } catch (error) {
       console.error('Erreur lors de la suppression de la demande de voyage:', error);
       throw error;
@@ -216,7 +222,7 @@ export class TravelRequestsAdminService {
     recentRequests: number; // Derniers 30 jours
   }> {
     try {
-      const requestsRef = this.db.collection(COLLECTION_NAME);
+      const requestsRef = this.getDb().collection(COLLECTION_NAME);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
@@ -255,7 +261,7 @@ export class TravelRequestsAdminService {
    */
   static async getRequestsByDestination(): Promise<{ destination: string; count: number }[]> {
     try {
-      const snapshot = await this.db.collection(COLLECTION_NAME).get();
+      const snapshot = await this.getDb().collection(COLLECTION_NAME).get();
       const destinationCounts: { [key: string]: number } = {};
 
       snapshot.forEach((doc) => {

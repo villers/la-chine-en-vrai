@@ -16,14 +16,20 @@ export interface AdminContactMessage {
 }
 
 export class ContactsAdminService {
-  private static db = getFirestore(initializeFirebaseAdmin());
+  private static getDb() {
+    const app = initializeFirebaseAdmin();
+    if (!app) {
+      throw new Error('Firebase Admin n\'est pas initialisé');
+    }
+    return getFirestore(app);
+  }
 
   /**
    * Récupère tous les messages de contact avec pagination
    */
   static async getAllContacts(limit = 50, offset = 0): Promise<AdminContactMessage[]> {
     try {
-      const contactsRef = this.db.collection(COLLECTION_NAME);
+      const contactsRef = this.getDb().collection(COLLECTION_NAME);
       let query = contactsRef
         .orderBy('createdAt', 'desc');
 
@@ -65,7 +71,7 @@ export class ContactsAdminService {
    */
   static async getContactById(id: string): Promise<AdminContactMessage | null> {
     try {
-      const doc = await this.db.collection(COLLECTION_NAME).doc(id).get();
+      const doc = await this.getDb().collection(COLLECTION_NAME).doc(id).get();
       
       if (!doc.exists) {
         return null;
@@ -94,7 +100,7 @@ export class ContactsAdminService {
    */
   static async updateContactStatus(id: string, status: 'new' | 'in_progress' | 'resolved'): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).update({
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update({
         status,
         updatedAt: new Date()
       });
@@ -109,7 +115,7 @@ export class ContactsAdminService {
    */
   static async deleteContact(id: string): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).delete();
+      await this.getDb().collection(COLLECTION_NAME).doc(id).delete();
     } catch (error) {
       console.error('Erreur lors de la suppression du contact:', error);
       throw error;
@@ -126,7 +132,7 @@ export class ContactsAdminService {
     resolved: number;
   }> {
     try {
-      const contactsRef = this.db.collection(COLLECTION_NAME);
+      const contactsRef = this.getDb().collection(COLLECTION_NAME);
       
       const [totalSnapshot, newSnapshot, inProgressSnapshot, resolvedSnapshot] = await Promise.all([
         contactsRef.get(),

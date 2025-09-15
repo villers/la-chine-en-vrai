@@ -13,7 +13,13 @@ export interface AdminNewsletterSubscriber {
 }
 
 export class NewsletterAdminService {
-  private static db = getFirestore(initializeFirebaseAdmin());
+  private static getDb() {
+    const app = initializeFirebaseAdmin();
+    if (!app) {
+      throw new Error('Firebase Admin n\'est pas initialisé');
+    }
+    return getFirestore(app);
+  }
 
   /**
    * Récupère tous les abonnés avec pagination
@@ -24,7 +30,7 @@ export class NewsletterAdminService {
     offset = 0
   ): Promise<AdminNewsletterSubscriber[]> {
     try {
-      const subscribersRef = this.db.collection(COLLECTION_NAME);
+      const subscribersRef = this.getDb().collection(COLLECTION_NAME);
       let query = subscribersRef.orderBy('createdAt', 'desc');
 
       if (!includeInactive) {
@@ -66,7 +72,7 @@ export class NewsletterAdminService {
    */
   static async getSubscriberById(id: string): Promise<AdminNewsletterSubscriber | null> {
     try {
-      const doc = await this.db.collection(COLLECTION_NAME).doc(id).get();
+      const doc = await this.getDb().collection(COLLECTION_NAME).doc(id).get();
       
       if (!doc.exists) {
         return null;
@@ -92,7 +98,7 @@ export class NewsletterAdminService {
    */
   static async getSubscriberByEmail(email: string): Promise<AdminNewsletterSubscriber | null> {
     try {
-      const snapshot = await this.db.collection(COLLECTION_NAME)
+      const snapshot = await this.getDb().collection(COLLECTION_NAME)
         .where('email', '==', email)
         .limit(1)
         .get();
@@ -133,7 +139,7 @@ export class NewsletterAdminService {
         updateData.unsubscribedAt = null;
       }
 
-      await this.db.collection(COLLECTION_NAME).doc(id).update(updateData);
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update(updateData);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du statut de l\'abonné:', error);
       throw error;
@@ -145,7 +151,7 @@ export class NewsletterAdminService {
    */
   static async deleteSubscriber(id: string): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).delete();
+      await this.getDb().collection(COLLECTION_NAME).doc(id).delete();
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'abonné:', error);
       throw error;
@@ -157,7 +163,7 @@ export class NewsletterAdminService {
    */
   static async exportActiveSubscribers(): Promise<{ email: string; createdAt: any; source?: string }[]> {
     try {
-      const snapshot = await this.db.collection(COLLECTION_NAME)
+      const snapshot = await this.getDb().collection(COLLECTION_NAME)
         .where('isActive', '==', true)
         .orderBy('createdAt', 'desc')
         .get();
@@ -190,7 +196,7 @@ export class NewsletterAdminService {
     recentSubscriptions: number; // Derniers 30 jours
   }> {
     try {
-      const subscribersRef = this.db.collection(COLLECTION_NAME);
+      const subscribersRef = this.getDb().collection(COLLECTION_NAME);
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       

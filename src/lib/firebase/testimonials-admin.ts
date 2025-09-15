@@ -33,7 +33,13 @@ export interface CreateTestimonialData {
 }
 
 export class TestimonialsAdminService {
-  private static db = getFirestore(initializeFirebaseAdmin());
+  private static getDb() {
+    const app = initializeFirebaseAdmin();
+    if (!app) {
+      throw new Error('Firebase Admin n\'est pas initialisé');
+    }
+    return getFirestore(app);
+  }
 
   /**
    * Récupère tous les témoignages avec pagination
@@ -44,7 +50,7 @@ export class TestimonialsAdminService {
     offset = 0
   ): Promise<AdminTestimonial[]> {
     try {
-      const testimonialsRef = this.db.collection(COLLECTION_NAME);
+      const testimonialsRef = this.getDb().collection(COLLECTION_NAME);
       let query = testimonialsRef.orderBy('createdAt', 'desc');
 
       if (!includeUnpublished) {
@@ -93,7 +99,7 @@ export class TestimonialsAdminService {
    */
   static async getTestimonialById(id: string): Promise<AdminTestimonial | null> {
     try {
-      const doc = await this.db.collection(COLLECTION_NAME).doc(id).get();
+      const doc = await this.getDb().collection(COLLECTION_NAME).doc(id).get();
       
       if (!doc.exists) {
         return null;
@@ -135,7 +141,7 @@ export class TestimonialsAdminService {
         updatedAt: now
       };
 
-      const docRef = await this.db.collection(COLLECTION_NAME).add(testimonialData);
+      const docRef = await this.getDb().collection(COLLECTION_NAME).add(testimonialData);
       return docRef.id;
     } catch (error) {
       console.error('Erreur lors de la création du témoignage:', error);
@@ -156,7 +162,7 @@ export class TestimonialsAdminService {
       delete updateData.id;
       delete updateData.createdAt;
 
-      await this.db.collection(COLLECTION_NAME).doc(id).update(updateData);
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update(updateData);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du témoignage:', error);
       throw error;
@@ -168,7 +174,7 @@ export class TestimonialsAdminService {
    */
   static async deleteTestimonial(id: string): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).delete();
+      await this.getDb().collection(COLLECTION_NAME).doc(id).delete();
     } catch (error) {
       console.error('Erreur lors de la suppression du témoignage:', error);
       throw error;
@@ -180,7 +186,7 @@ export class TestimonialsAdminService {
    */
   static async updatePublishStatus(id: string, isPublished: boolean): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).update({
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update({
         isPublished,
         updatedAt: new Date()
       });
@@ -195,7 +201,7 @@ export class TestimonialsAdminService {
    */
   static async updateVerificationStatus(id: string, isVerified: boolean): Promise<void> {
     try {
-      await this.db.collection(COLLECTION_NAME).doc(id).update({
+      await this.getDb().collection(COLLECTION_NAME).doc(id).update({
         isVerified,
         updatedAt: new Date()
       });
@@ -215,7 +221,7 @@ export class TestimonialsAdminService {
     pending: number;
   }> {
     try {
-      const testimonialsRef = this.db.collection(COLLECTION_NAME);
+      const testimonialsRef = this.getDb().collection(COLLECTION_NAME);
       
       const [totalSnapshot, publishedSnapshot, verifiedSnapshot, pendingSnapshot] = await Promise.all([
         testimonialsRef.get(),
